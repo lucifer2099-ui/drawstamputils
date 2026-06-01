@@ -50,6 +50,9 @@ export type ICompany = {
     rectangleTextMargin: number // 矩形文字距离边框的边距（毫米）
     rectanglePositionX?: number // 矩形文字水平位置偏移量（毫米），正数向右，负数向左
     rectanglePositionY?: number // 矩形文字垂直位置偏移量（毫米），正数向下，负数向上
+    drawAging?: boolean // 是否绘制做旧效果
+    agingIntensity?: number // 做旧强度
+    agingNoiseSize?: number // 做旧噪声大小 (mm)
 }
 
 // 印章编码
@@ -153,6 +156,12 @@ export type IDrawStar = {
     starPositionX?: number // 五角星水平位置
     scaleToSmallStar: boolean // 是否缩放为小五角星
     color?: string // 颜色
+    drawRoughEdge?: boolean // 五角星是否绘制毛边
+    roughEdgeCount?: number // 五角星毛边点数
+    roughEdgeSize?: number // 五角星毛边大小 (mm)
+    drawAging?: boolean // 五角星是否绘制做旧效果
+    agingIntensity?: number // 五角星做旧强度 (0-100)
+    agingNoiseSize?: number // 五角星做旧噪声大小 (mm)
 }
 
 // 印章类型
@@ -171,6 +180,9 @@ export type IStampType = {
     color?: string // 颜色
     orientation?: 'horizontal' | 'vertical' // 文字方向
     rotation?: number // 旋转角度
+    drawAging?: boolean // 是否绘制做旧效果
+    agingIntensity?: number // 做旧强度
+    agingNoiseSize?: number // 做旧噪声大小 (mm)
 }
 
 // 内圈圆

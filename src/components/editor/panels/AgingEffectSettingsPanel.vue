@@ -17,6 +17,14 @@
           />
           {{ t('stamp.aging.enable') }}
         </label>
+        <label v-if="config.drawStar.drawStar" class="checkbox-label">
+          <input
+            type="checkbox"
+            :checked="config.drawStar.drawAging ?? false"
+            @change="updateStarAging"
+          />
+          五角星做旧效果
+        </label>
         <label class="checkbox-label">
           <input
             type="checkbox"
@@ -31,8 +39,9 @@
       </div>
 
       <!-- 拖动条类设置 -->
-      <div v-if="config.agingEffect.applyAging" class="range-section">
-        <div class="range-item">
+      <div v-if="config.agingEffect.applyAging || (config.drawStar.drawStar && config.drawStar.drawAging)" class="range-section">
+        <!-- 全局做旧设置 -->
+        <div v-if="config.agingEffect.applyAging" class="range-item">
           <div class="range-header">
             <span class="range-label-text">{{ t('stamp.aging.intensity') }}</span>
             <span class="range-value-display">[ {{ config.agingEffect.agingIntensity }}% ]</span>
@@ -48,6 +57,45 @@
               @input="updateAgingIntensity"
             />
             <button type="button" class="range-btn" @click.stop="adjustIntensity(0.1)">▶</button>
+          </div>
+        </div>
+
+        <!-- 五角星做旧设置项 -->
+        <div v-if="config.drawStar.drawStar && config.drawStar.drawAging" class="range-item-divider" style="margin: 8px 0; border-top: 1px dashed #e5e7eb;"></div>
+        <div v-if="config.drawStar.drawStar && config.drawStar.drawAging" class="range-item">
+          <div class="range-header">
+            <span class="range-label-text">五角星做旧强度</span>
+            <span class="range-value-display">[ {{ config.drawStar.agingIntensity ?? 50 }} ]</span>
+          </div>
+          <div class="range-container">
+            <button type="button" class="range-btn" @click.stop="adjustStarIntensity(-1)">◀</button>
+            <input
+              type="range"
+              :value="config.drawStar.agingIntensity ?? 50"
+              min="0"
+              max="5000"
+              step="1"
+              @input="updateStarAgingIntensity"
+            />
+            <button type="button" class="range-btn" @click.stop="adjustStarIntensity(1)">▶</button>
+          </div>
+        </div>
+        <div v-if="config.drawStar.drawStar && config.drawStar.drawAging" class="range-item">
+          <div class="range-header">
+            <span class="range-label-text">五角星做旧噪点大小 (mm)</span>
+            <span class="range-value-display">[ {{ (config.drawStar.agingNoiseSize ?? 0.15).toFixed(2) }} ]</span>
+          </div>
+          <div class="range-container">
+            <button type="button" class="range-btn" @click.stop="adjustStarNoiseSize(-0.01)">◀</button>
+            <input
+              type="range"
+              :value="config.drawStar.agingNoiseSize ?? 0.15"
+              min="0.05"
+              max="0.5"
+              step="0.01"
+              @input="updateStarAgingNoiseSize"
+            />
+            <button type="button" class="range-btn" @click.stop="adjustStarNoiseSize(0.01)">▶</button>
           </div>
         </div>
       </div>
@@ -108,6 +156,49 @@ const adjustIntensity = (delta: number) => {
   emit('update-config', (config) => {
     const newValue = Math.max(0, Math.min(100, config.agingEffect.agingIntensity + delta))
     config.agingEffect.agingIntensity = newValue
+  })
+  emit('refresh-aging-effect')
+}
+
+const updateStarAging = (event: Event) => {
+  const checked = (event.target as HTMLInputElement).checked
+  emit('update-config', (config) => {
+    if (!config.drawStar) config.drawStar = {} as any
+    config.drawStar.drawAging = checked
+  })
+  emit('refresh-aging-effect')
+}
+
+const updateStarAgingIntensity = (event: Event) => {
+  const value = Number((event.target as HTMLInputElement).value)
+  emit('update-config', (config) => {
+    config.drawStar.agingIntensity = value
+  })
+  emit('refresh-aging-effect')
+}
+
+const updateStarAgingNoiseSize = (event: Event) => {
+  const value = Number((event.target as HTMLInputElement).value)
+  emit('update-config', (config) => {
+    config.drawStar.agingNoiseSize = value
+  })
+  emit('refresh-aging-effect')
+}
+
+const adjustStarIntensity = (delta: number) => {
+  emit('update-config', (config) => {
+    const currentValue = config.drawStar.agingIntensity ?? 50
+    const newValue = Math.max(0, Math.min(5000, currentValue + delta))
+    config.drawStar.agingIntensity = newValue
+  })
+  emit('refresh-aging-effect')
+}
+
+const adjustStarNoiseSize = (delta: number) => {
+  emit('update-config', (config) => {
+    const currentValue = config.drawStar.agingNoiseSize ?? 0.15
+    const newValue = Math.max(0.05, Math.min(0.5, currentValue + delta))
+    config.drawStar.agingNoiseSize = Number(newValue.toFixed(2))
   })
   emit('refresh-aging-effect')
 }

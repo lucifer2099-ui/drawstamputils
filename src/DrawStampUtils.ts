@@ -1001,6 +1001,110 @@ export class DrawStampUtils {
         }, 50)
     }
 
+    /**
+     * 将当前绘制的印章导出为 Data URL (base64)
+     */
+    exportStampAsDataURL(
+        format: 'png' | 'jpeg' | 'svg' = 'png',
+        quality: number = 0.92,
+        targetWidth?: number,
+        targetHeight?: number
+    ): Promise<string> {
+        return new Promise((resolve) => {
+            // 图像与边框的间距
+            let imagePadding = 1
+            let stampWidth = (this.drawStampConfigs.width + imagePadding*2) * this.mmToPixel
+            let stampHeight = (this.drawStampConfigs.height + imagePadding*2) * this.mmToPixel
+
+            // 首先隐藏标尺与虚线
+            const originRuler = { ...this.drawStampConfigs.ruler }
+            this.drawStampConfigs.ruler.showCrossLine = false
+            this.drawStampConfigs.ruler.showRuler = false
+            this.drawStampConfigs.ruler.showDashLine = false
+            this.drawStampConfigs.ruler.showSideRuler = false
+            this.drawStampConfigs.ruler.showFullRuler = false
+            this.drawStampConfigs.ruler.showCurrentPositionText = false
+            
+            // 刷新渲染
+            this.refreshStamp()
+
+            // 给渲染留出一帧时间
+            setTimeout(() => {
+                const saveCanvas = document.createElement('canvas')
+                saveCanvas.width = stampWidth
+                saveCanvas.height = stampHeight
+                const saveCtx = saveCanvas.getContext('2d')
+                if (!saveCtx) {
+                    // 恢复标尺
+                    this.drawStampConfigs.ruler = originRuler
+                    this.refreshStamp()
+                    resolve('')
+                    return
+                }
+                saveCtx.clearRect(0, 0, stampWidth, stampHeight)
+                saveCtx.drawImage(
+                    this.canvas,
+                    RULER_WIDTH*this.mmToPixel + this.stampOffsetX * this.mmToPixel,
+                    RULER_HEIGHT*this.mmToPixel + this.stampOffsetY * this.mmToPixel,
+                    stampWidth,
+                    stampHeight,
+                    imagePadding * this.mmToPixel,
+                    imagePadding * this.mmToPixel,
+                    stampWidth,
+                    stampHeight
+                )
+
+                if (this.drawStampConfigs.agingEffect.applyAging) {
+                    this.addAgingEffect(saveCtx, stampWidth, stampHeight, false)
+                }
+
+                let outputCanvas = saveCanvas
+                const exportWidth = targetWidth && targetWidth > 0 ? targetWidth : stampWidth
+                const exportHeight = targetHeight && targetHeight > 0 ? targetHeight : stampHeight
+                if (exportWidth !== stampWidth || exportHeight !== stampHeight) {
+                    const scaledCanvas = document.createElement('canvas')
+                    scaledCanvas.width = exportWidth
+                    scaledCanvas.height = exportHeight
+                    const scaledCtx = scaledCanvas.getContext('2d')
+                    if (scaledCtx) {
+                        scaledCtx.drawImage(saveCanvas, 0, 0, exportWidth, exportHeight)
+                        outputCanvas = scaledCanvas
+                    }
+                }
+
+                let dataURL: string
+                if (format === 'svg') {
+                    const pngDataURL = outputCanvas.toDataURL('image/png')
+                    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${outputCanvas.width}" height="${outputCanvas.height}">
+  <image href="${pngDataURL}" width="${outputCanvas.width}" height="${outputCanvas.height}"/>
+</svg>`
+                    dataURL = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`
+                } else if (format === 'jpeg') {
+                    const tempCanvas = document.createElement('canvas')
+                    tempCanvas.width = outputCanvas.width
+                    tempCanvas.height = outputCanvas.height
+                    const tempCtx = tempCanvas.getContext('2d')
+                    if (tempCtx) {
+                        tempCtx.fillStyle = '#FFFFFF'
+                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height)
+                        tempCtx.drawImage(outputCanvas, 0, 0, tempCanvas.width, tempCanvas.height)
+                        dataURL = tempCanvas.toDataURL('image/jpeg', quality)
+                    } else {
+                        dataURL = outputCanvas.toDataURL('image/jpeg', quality)
+                    }
+                } else {
+                    dataURL = outputCanvas.toDataURL('image/png')
+                }
+
+                // 恢复标尺并重绘
+                this.drawStampConfigs.ruler = originRuler
+                this.refreshStamp()
+
+                resolve(dataURL)
+            }, 50)
+        })
+    }
+
     getExportBaseSize(padding: number = 1) {
         const width = (this.drawStampConfigs.width + padding * 2) * this.mmToPixel
         const height = (this.drawStampConfigs.height + padding * 2) * this.mmToPixel

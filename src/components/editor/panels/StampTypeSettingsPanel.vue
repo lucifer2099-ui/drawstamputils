@@ -193,6 +193,53 @@
                 <button type="button" class="range-btn" @click.stop="adjustRotation(index, 0.1)">▶</button>
               </div>
             </div>
+
+            <!-- 局部做旧效果设置 -->
+            <div class="range-item-divider" style="margin: 8px 0; border-top: 1px dashed #e5e7eb; width: 100%;"></div>
+            <label class="inline-label">
+              <span class="label-text">开启做旧效果:</span>
+              <input
+                type="checkbox"
+                :checked="type.drawAging ?? false"
+                @change="updateStampType(index, 'drawAging', ($event.target as HTMLInputElement).checked)"
+              />
+            </label>
+            <div v-if="type.drawAging" class="range-item">
+              <div class="range-header">
+                <span class="range-label-text">做旧强度</span>
+                <span class="range-value-display">[ {{ type.agingIntensity ?? 50 }} ]</span>
+              </div>
+              <div class="range-container">
+                <button type="button" class="range-btn" @click.stop="adjustStampTypeAgingIntensity(index, -1)">◀</button>
+                <input
+                  type="range"
+                  :value="type.agingIntensity ?? 50"
+                  min="0"
+                  max="5000"
+                  step="1"
+                  @input="updateStampType(index, 'agingIntensity', parseNumber($event))"
+                />
+                <button type="button" class="range-btn" @click.stop="adjustStampTypeAgingIntensity(index, 1)">▶</button>
+              </div>
+            </div>
+            <div v-if="type.drawAging" class="range-item">
+              <div class="range-header">
+                <span class="range-label-text">做旧噪点大小 (mm)</span>
+                <span class="range-value-display">[ {{ (type.agingNoiseSize ?? 0.15).toFixed(2) }} ]</span>
+              </div>
+              <div class="range-container">
+                <button type="button" class="range-btn" @click.stop="adjustStampTypeAgingNoiseSize(index, -0.01)">◀</button>
+                <input
+                  type="range"
+                  :value="type.agingNoiseSize ?? 0.15"
+                  min="0.05"
+                  max="0.5"
+                  step="0.01"
+                  @input="updateStampType(index, 'agingNoiseSize', parseNumber($event))"
+                />
+                <button type="button" class="range-btn" @click.stop="adjustStampTypeAgingNoiseSize(index, 0.01)">▶</button>
+              </div>
+            </div>
           </div>
         </div>
         </transition>
@@ -401,6 +448,26 @@ const adjustRotation = (index: number, delta: number) => {
     const currentValue = list[index].rotation || 0
     const newValue = Math.max(-180, Math.min(180, currentValue + delta))
     list[index].rotation = newValue
+  })
+}
+
+const adjustStampTypeAgingIntensity = (index: number, delta: number) => {
+  emit('update-config', (config) => {
+    const list = config.stampTypeList || []
+    if (!list[index]) return
+    const currentValue = list[index].agingIntensity ?? 50
+    const newValue = Math.max(0, Math.min(5000, currentValue + delta))
+    list[index].agingIntensity = newValue
+  })
+}
+
+const adjustStampTypeAgingNoiseSize = (index: number, delta: number) => {
+  emit('update-config', (config) => {
+    const list = config.stampTypeList || []
+    if (!list[index]) return
+    const currentValue = list[index].agingNoiseSize ?? 0.15
+    const newValue = Math.max(0.05, Math.min(0.5, currentValue + delta))
+    list[index].agingNoiseSize = Number(newValue.toFixed(2))
   })
 }
 </script>

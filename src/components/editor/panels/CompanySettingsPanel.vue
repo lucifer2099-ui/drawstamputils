@@ -271,6 +271,53 @@
                 <span class="help-text">正数向下，负数向上</span>
               </div>
             </template>
+
+            <!-- 局部做旧效果设置 -->
+            <div class="range-item-divider" style="margin: 8px 0; border-top: 1px dashed #e5e7eb; width: 100%;"></div>
+            <label class="inline-label">
+              <span class="label-text">开启做旧效果:</span>
+              <input
+                type="checkbox"
+                :checked="company.drawAging ?? false"
+                @change="updateConfig((c) => c.drawAging = ($event.target as HTMLInputElement).checked, index)"
+              />
+            </label>
+            <div v-if="company.drawAging" class="range-item">
+              <div class="range-header">
+                <span class="range-label-text">做旧强度</span>
+                <span class="range-value-display">[ {{ company.agingIntensity ?? 50 }} ]</span>
+              </div>
+              <div class="range-container">
+                <button type="button" class="range-btn" @click.stop="adjustCompanyAgingIntensity(index, -1)">◀</button>
+                <input
+                  type="range"
+                  :value="company.agingIntensity ?? 50"
+                  min="0"
+                  max="1300"
+                  step="1"
+                  @input="onNumberInput(index, 'agingIntensity', $event)"
+                />
+                <button type="button" class="range-btn" @click.stop="adjustCompanyAgingIntensity(index, 1)">▶</button>
+              </div>
+            </div>
+            <div v-if="company.drawAging" class="range-item">
+              <div class="range-header">
+                <span class="range-label-text">做旧噪点大小 (mm)</span>
+                <span class="range-value-display">[ {{ (company.agingNoiseSize ?? 0.15).toFixed(2) }} ]</span>
+              </div>
+              <div class="range-container">
+                <button type="button" class="range-btn" @click.stop="adjustCompanyAgingNoiseSize(index, -0.01)">◀</button>
+                <input
+                  type="range"
+                  :value="company.agingNoiseSize ?? 0.15"
+                  min="0.05"
+                  max="0.5"
+                  step="0.01"
+                  @input="onNumberInput(index, 'agingNoiseSize', $event)"
+                />
+                <button type="button" class="range-btn" @click.stop="adjustCompanyAgingNoiseSize(index, 0.01)">▶</button>
+              </div>
+            </div>
           </div>
         </div>
         </transition>
@@ -549,6 +596,22 @@ const addCompany = () => {
 
     list.push(newCompany)
   })
+}
+
+const adjustCompanyAgingIntensity = (index: number, delta: number) => {
+  updateConfig((company) => {
+    const currentValue = company.agingIntensity ?? 50
+    const newValue = Math.max(0, Math.min(1300, currentValue + delta))
+    company.agingIntensity = newValue
+  }, index)
+}
+
+const adjustCompanyAgingNoiseSize = (index: number, delta: number) => {
+  updateConfig((company) => {
+    const currentValue = company.agingNoiseSize ?? 0.15
+    const newValue = Math.max(0.05, Math.min(0.5, currentValue + delta))
+    company.agingNoiseSize = Number(newValue.toFixed(2))
+  }, index)
 }
 </script>
 

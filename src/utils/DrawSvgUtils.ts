@@ -163,14 +163,102 @@ export class DrawSvgUtils {
                     centerX + offsetX,
                     centerY + starConfig.starPositionY * this.mmToPixel
                 );
-                ctx.scale(
-                    starConfig.starDiameter * this.mmToPixel / 2,
-                    starConfig.starDiameter * this.mmToPixel / 2
-                );
+                const R = (starConfig.starDiameter * this.mmToPixel) / 2;
+                ctx.scale(R, R);
                 
                 const path = new Path2D(starConfig.svgPath);
                 ctx.fillStyle = color;
                 ctx.fill(path);
+
+                // --- 新增：五角星局部的做旧和毛边擦除 ---
+                // 1. 五角星毛边效果 (利用扁椭圆制造更加自然的纸张纤维或边缘磨损切口)
+                if (starConfig.drawRoughEdge) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.fillStyle = '#FFFFFF';
+                    
+                    const size = starConfig.roughEdgeSize ?? 0.1;
+                    const count = starConfig.roughEdgeCount ?? 15;
+                    const pointRadius = R > 0 ? (size * this.mmToPixel) / R : 0.03; 
+                    
+                    for (let i = 0; i < count; i++) {
+                        const px = (Math.random() - 0.5) * 1.8;
+                        const py = (Math.random() - 0.5) * 1.8;
+                        
+                        const rx = (Math.random() * 0.6 + 0.4) * pointRadius;
+                        // 纵横比在 0.3 到 0.7 之间，使其扁平，旋转方向随机，避免圆形切口
+                        const ry = rx * (Math.random() * 0.4 + 0.3);
+                        const rotation = Math.random() * Math.PI * 2;
+                        
+                        ctx.beginPath();
+                        ctx.ellipse(px, py, rx, ry, rotation, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // 2. 五角星做旧效果 (混合不规则扁椭圆、极细短线划痕和复合碎斑点，避免明显的圆形噪点)
+                if (starConfig.drawAging) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.strokeStyle = '#FFFFFF';
+                    
+                    const noiseSize = starConfig.agingNoiseSize ?? 0.15;
+                    const intensity = starConfig.agingIntensity ?? 50;
+                    const pointRadius = R > 0 ? (noiseSize * this.mmToPixel) / R : 0.04;
+                    const pointsCount = Math.round(intensity * 0.8); // 强度最大 5000 时可产生 4000 个做旧斑驳点
+                    
+                    for (let i = 0; i < pointsCount; i++) {
+                        const px = (Math.random() - 0.5) * 1.9;
+                        const py = (Math.random() - 0.5) * 1.9;
+                        
+                        const rand = Math.random();
+                        if (rand < 0.6) {
+                            // 2.1 扁椭圆或长条状斑驳，避免明显的圆形
+                            const rx = (Math.random() * 0.8 + 0.2) * pointRadius;
+                            // 纵横比在 0.2 到 0.6 之间，呈现扁平状，避免正圆
+                            const ry = rx * (Math.random() * 0.4 + 0.2);
+                            const rotation = Math.random() * Math.PI * 2;
+                            ctx.beginPath();
+                            ctx.ellipse(px, py, rx, ry, rotation, 0, Math.PI * 2);
+                            ctx.fill();
+                        } else if (rand < 0.85) {
+                            // 2.2 细长划痕 (Scratch)，模拟物理划伤
+                            const length = (Math.random() * 1.5 + 0.5) * pointRadius; // 划痕长度
+                            const angle = Math.random() * Math.PI * 2;
+                            const dx = Math.cos(angle) * length;
+                            const dy = Math.sin(angle) * length;
+                            const lineWidth = (Math.random() * 0.3 + 0.15) * pointRadius; // 划痕粗细
+                            
+                            ctx.beginPath();
+                            ctx.lineWidth = lineWidth;
+                            ctx.lineCap = 'round';
+                            ctx.moveTo(px, py);
+                            ctx.lineTo(px + dx, py + dy);
+                            ctx.stroke();
+                        } else {
+                            // 2.3 复合碎斑：由 2~3 个更小且相互重叠的微小圆点组成，打破单一圆形的物理边界
+                            const rx = (Math.random() * 0.6 + 0.2) * pointRadius;
+                            ctx.beginPath();
+                            // 主圆
+                            ctx.arc(px, py, rx, 0, Math.PI * 2);
+                            // 偏置圆 1
+                            const ox1 = (Math.random() - 0.5) * rx * 0.8;
+                            const oy1 = (Math.random() - 0.5) * rx * 0.8;
+                            const r1 = rx * (Math.random() * 0.4 + 0.4);
+                            ctx.arc(px + ox1, py + oy1, r1, 0, Math.PI * 2);
+                            // 偏置圆 2
+                            const ox2 = (Math.random() - 0.5) * rx * 0.8;
+                            const oy2 = (Math.random() - 0.5) * rx * 0.8;
+                            const r2 = rx * (Math.random() * 0.4 + 0.4);
+                            ctx.arc(px + ox2, py + oy2, r2, 0, Math.PI * 2);
+                            
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+                }
                 
                 ctx.restore();
             }

@@ -17,6 +17,14 @@
           />
           {{ t('stamp.star.enable') }}
         </label>
+        <label v-if="config.drawStar.drawStar" class="checkbox-label">
+          <input
+            type="checkbox"
+            :checked="config.drawStar.drawRoughEdge ?? false"
+            @change="updateStar('drawRoughEdge', ($event.target as HTMLInputElement).checked)"
+          />
+          {{ t('stamp.star.drawRoughEdge') === 'stamp.star.drawRoughEdge' ? '五角星毛边效果' : t('stamp.star.drawRoughEdge') }}
+        </label>
       </div>
 
       <!-- 拖动条类设置 -->
@@ -73,6 +81,41 @@
               @input="updateStar('starPositionY', parseNumber($event))"
             />
             <button type="button" class="range-btn" @click.stop="adjustPositionY(0.1)">▶</button>
+          </div>
+        </div>
+
+        <!-- 五角星毛边微调 -->
+        <div v-if="config.drawStar.drawRoughEdge" class="range-item-divider" style="margin: 8px 0; border-top: 1px dashed #e5e7eb;"></div>
+        <div v-if="config.drawStar.drawRoughEdge" class="range-item">
+          <div class="range-header">
+            <span class="range-label-text">五角星毛边点数</span>
+            <span class="range-value-display">[ {{ config.drawStar.roughEdgeCount ?? 15 }} ]</span>
+          </div>
+          <div class="range-container">
+            <input
+              type="range"
+              :value="config.drawStar.roughEdgeCount ?? 15"
+              min="1"
+              max="50"
+              step="1"
+              @input="updateStar('roughEdgeCount', parseNumber($event))"
+            />
+          </div>
+        </div>
+        <div v-if="config.drawStar.drawRoughEdge" class="range-item">
+          <div class="range-header">
+            <span class="range-label-text">五角星毛边大小 (mm)</span>
+            <span class="range-value-display">[ {{ (config.drawStar.roughEdgeSize ?? 0.1).toFixed(2) }} ]</span>
+          </div>
+          <div class="range-container">
+            <input
+              type="range"
+              :value="config.drawStar.roughEdgeSize ?? 0.1"
+              min="0.01"
+              max="0.5"
+              step="0.01"
+              @input="updateStar('roughEdgeSize', parseNumber($event))"
+            />
           </div>
         </div>
       </div>

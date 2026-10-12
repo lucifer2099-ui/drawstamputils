@@ -158,6 +158,12 @@ async function main() {
 
     console.log(`📂 共加载了 ${templates.length} 个 JSON 印章模板。`);
 
+    // Build a map for O(1) template lookups
+    const templateMap = new Map();
+    for (const t of templates) {
+        templateMap.set(t.companyName, t);
+    }
+
     // 3. 查找 Chrome 可执行文件
     const chromePath = findChromeExecutable();
     if (!chromePath) {
@@ -200,7 +206,7 @@ async function main() {
         const generateCount = item.count;
         
         // 查找精准匹配的模板
-        const matched = templates.find(t => t.companyName === companyName);
+        const matched = templateMap.get(companyName);
         if (!matched) {
             console.warn(`⚠️  未找到匹配的公司名称模板，跳过生成: ${companyName}`);
             continue;

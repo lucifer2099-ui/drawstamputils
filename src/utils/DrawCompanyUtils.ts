@@ -108,6 +108,8 @@ export class DrawCompanyUtils {
           Math.PI - totalAngle / 2 : 
           Math.PI + (Math.PI - totalAngle) / 2)
       
+        const angleOffset = company.rotateDirection === 'clockwise' ? -Math.PI/2 : Math.PI/2
+
         // 计算字符位置时考虑椭圆文字调整
         if (company.adjustEllipseText) {
           let halfCharCount = 0
@@ -135,7 +137,7 @@ export class DrawCompanyUtils {
             ctx.save()
             ctx.translate(x, y)
             // 根据旋转方向调整文字旋转角度
-            ctx.rotate(angle + (company.rotateDirection === 'clockwise' ? -Math.PI/2 : Math.PI/2))
+            ctx.rotate(angle + angleOffset)
             ctx.scale(company.compression, 1)
 
             // 创建文字路径
@@ -170,7 +172,7 @@ export class DrawCompanyUtils {
       
             ctx.save()
             ctx.translate(x, y)
-            ctx.rotate(angle + (company.rotateDirection === 'clockwise' ? -Math.PI/2 : Math.PI/2))
+            ctx.rotate(angle + angleOffset)
             ctx.scale(company.compression, 1)
 
             // 创建文字路径

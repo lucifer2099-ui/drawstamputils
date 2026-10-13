@@ -22,6 +22,7 @@ function findChromeExecutable() {
         'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
         'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        '/usr/bin/google-chrome',
         path.join(os.homedir(), 'AppData\\Local\\Google\\Chrome\\Application\\chrome.exe'),
         path.join(os.homedir(), 'AppData\\Local\\Microsoft\\Edge\\Application\\msedge.exe'),
     ];
@@ -299,7 +300,7 @@ async function main() {
             }
             const buffer = Buffer.from(base64Data.split(',')[1], 'base64');
             const filePath = path.join(targetDir, `${i}.jpg`);
-            fs.writeFileSync(filePath, buffer);
+            await fs.promises.writeFile(filePath, buffer);
             console.log(`    -> 已生成: ${path.relative(rootDir, filePath)}`);
         }
         console.log(`✅ [${companyName}] 的 ${generateCount} 张印章已全部写入: ${path.relative(rootDir, targetDir)}`);

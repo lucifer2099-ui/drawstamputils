@@ -790,6 +790,7 @@ export class DrawStampUtils {
         const centerX = width / (2 * this.scale) + this.stampOffsetX * this.mmToPixel / this.scale;
         const centerY = height / (2 * this.scale) + this.stampOffsetY * this.mmToPixel / this.scale;
         const radius = (Math.max(width, height) / 2) * this.mmToPixel / this.scale;
+        const radiusSquared = radius * radius;
 
         // 如果需要刷新或者参数数组为空,则重新生成参数
         if (forceRefresh || this.drawStampConfigs.agingEffect.agingEffectParams.length === 0) {
@@ -797,8 +798,9 @@ export class DrawStampUtils {
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const index = (y * width + x) * 4
-                    const distanceFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2))
-                    if (distanceFromCenter <= radius) {
+                    const dx = x - centerX;
+                    const dy = y - centerY;
+                    if (dx * dx + dy * dy <= radiusSquared) {
                         // 检查像素是否不是透明的（alpha 通道不为 0）
                         if (data[index + 3] > 0) {
                             const intensityFactor = this.drawStampConfigs.agingEffect.agingIntensity / 100

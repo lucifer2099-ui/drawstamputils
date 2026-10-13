@@ -130,6 +130,7 @@ import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { ICompany, IDrawStampConfig, IInnerCircle, IStampType } from './DrawStampTypes'
   import { useI18n } from 'vue-i18n'
 import { useStampStore } from './stores/stampStore'
+import { elementTypeToGroupMap } from './utils/constants'
 import BasicSettingsPanel from './components/editor/panels/BasicSettingsPanel.vue'
 import CompanySettingsPanel from './components/editor/panels/CompanySettingsPanel.vue'
 import StampTypeSettingsPanel from './components/editor/panels/StampTypeSettingsPanel.vue'
@@ -155,23 +156,6 @@ import SvgSettingsPanel from './components/editor/panels/SvgSettingsPanel.vue'
     selectedElementIndex?: number
     showAll?: boolean
     }>()
-
-  // 元素类型到设置组名称的映射
-const elementTypeToGroupMap: Record<string, string> = {
-    'basic': 'basic',
-    'company': 'company',
-    'stampType': 'stampType',
-    'code': 'code',
-    'taxNumber': 'taxNumber',
-    'star': 'star',
-    'circle': 'innerCircle',
-    'image': 'images',
-    'svg': 'svg',
-    'aging': 'aging',
-    'roughEdge': 'roughEdge',
-    'security': 'security',
-    'line': 'lines'
-  }
 
   // 获取当前应该显示的组名
   const currentGroupName = computed(() => {

@@ -37,18 +37,21 @@ function findChromeExecutable() {
 
 // 获取非冲突的输出目录名，实现“不覆盖原有图片”
 function getUniqueOutputDir(baseName) {
+    // Sanitize baseName to prevent path traversal
+    const safeBaseName = baseName.replace(/[\/\\]/g, '_');
+
     if (!fs.existsSync(outputBaseDir)) {
         fs.mkdirSync(outputBaseDir, { recursive: true });
     }
 
-    let targetDir = path.join(outputBaseDir, baseName);
+    let targetDir = path.join(outputBaseDir, safeBaseName);
     if (!fs.existsSync(targetDir)) {
         return targetDir;
     }
 
     let counter = 1;
     while (true) {
-        targetDir = path.join(outputBaseDir, `${baseName}_${counter}`);
+        targetDir = path.join(outputBaseDir, `${safeBaseName}_${counter}`);
         if (!fs.existsSync(targetDir)) {
             return targetDir;
         }

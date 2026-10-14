@@ -28,10 +28,10 @@ export class DrawImageCanvas {
         // 清除之前的内容
         this.imageCtx.clearRect(0, 0, this.imageCanvas.width, this.imageCanvas.height);
 
-        // 创建一个临时的 div 来解析 SVG 内容
-        const div = document.createElement('div');
-        div.innerHTML = svgContent;
-        const svgElement = div.querySelector('svg');
+        // 使用 DOMParser 来安全地解析 SVG 内容
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+        const svgElement = doc.querySelector('svg');
         
         if (!svgElement) {
             throw new Error('Invalid SVG content');

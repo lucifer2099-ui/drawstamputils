@@ -29,10 +29,17 @@ export class DrawSvgUtils {
             // ctx.strokeRect(10, 10, rectSize, rectSize);
             // ctx.restore();
 
-            // 创建一个临时的 div 来解析 SVG 内容
-            const div = document.createElement('div');
-            div.innerHTML = svgContent;
-            const svgElement = div.querySelector('svg');
+            // 使用 DOMParser 安全地解析 SVG 内容，避免 XSS 风险
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+
+            // 检查解析错误
+            const parserError = doc.querySelector('parsererror');
+            if (parserError) {
+                throw new Error('Invalid SVG content: ' + parserError.textContent);
+            }
+
+            const svgElement = doc.querySelector('svg');
             if (!svgElement) {
                 throw new Error('Invalid SVG content');
             }

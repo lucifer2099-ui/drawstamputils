@@ -95,6 +95,15 @@ export class DrawCompanyUtils {
         ctx.textBaseline = 'bottom'
       
         const characters = company.companyName.split('')
+        const charWidthCache = new Map<string, number>()
+        const getCharWidth = (char: string) => {
+            let width = charWidthCache.get(char)
+            if (width === undefined) {
+                width = ctx.measureText(char).width
+                charWidthCache.set(char, width)
+            }
+            return width
+        }
         const characterCount = characters.length
         const borderOffset = company.borderOffset * this.mmToPixel
       
@@ -157,7 +166,7 @@ export class DrawCompanyUtils {
 
             ctx.fillText(char, 0, 0)
             if (company.drawAging) {
-                const charWidth = ctx.measureText(char).width;
+                const charWidth = getCharWidth(char);
                 this.applyTextAgingAt(ctx, fontSize, 'bottom', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
             }
             ctx.restore()
@@ -192,7 +201,7 @@ export class DrawCompanyUtils {
 
             ctx.fillText(char, 0, 0)
             if (company.drawAging) {
-                const charWidth = ctx.measureText(char).width;
+                const charWidth = getCharWidth(char);
                 this.applyTextAgingAt(ctx, fontSize, 'bottom', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
             }
             ctx.restore()
@@ -390,7 +399,7 @@ export class DrawCompanyUtils {
 
                     ctx.fillText(char, 0, 0)
                     if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -444,7 +453,7 @@ export class DrawCompanyUtils {
 
                     ctx.fillText(char, 0, 0)
                     if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -532,7 +541,7 @@ export class DrawCompanyUtils {
 
                 ctx.fillText(char, 0, 0)
                 if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()
@@ -566,7 +575,7 @@ export class DrawCompanyUtils {
 
                 ctx.fillText(char, 0, 0)
                 if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()
@@ -687,7 +696,7 @@ export class DrawCompanyUtils {
 
                     ctx.fillText(char, 0, 0)
                     if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -736,7 +745,7 @@ export class DrawCompanyUtils {
 
                     ctx.fillText(char, 0, 0)
                     if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -821,7 +830,7 @@ export class DrawCompanyUtils {
 
                 ctx.fillText(char, 0, 0)
                 if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()
@@ -853,7 +862,7 @@ export class DrawCompanyUtils {
 
                 ctx.fillText(char, 0, 0)
                 if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()

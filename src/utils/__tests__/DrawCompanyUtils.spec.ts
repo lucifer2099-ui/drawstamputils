@@ -45,7 +45,7 @@ describe('DrawCompanyUtils', () => {
     });
 
     it('should clear text paths', () => {
-        drawCompanyUtils['textPaths'] = [{ text: 'A', path: new Path2D(), type: 'company', bounds: { x: 0, y: 0, width: 10, height: 10 } }];
+        drawCompanyUtils['textPaths'] = [{ text: 'A', type: 'company', bounds: { x: 0, y: 0, width: 10, height: 10 } }];
         drawCompanyUtils.clearTextPaths();
         expect(drawCompanyUtils.getTextPaths()).toEqual([]);
     });

@@ -5,7 +5,7 @@ export class DrawCompanyUtils {
     // 添加存储文字路径的数组
     private textPaths: Array<{
         text: string,
-        path: Path2D,
+
         type: 'company',
         bounds: {
             x: number,
@@ -14,19 +14,6 @@ export class DrawCompanyUtils {
             height: number
         }
     }> = []
-
-    private pathCache = new Map<string, Path2D>()
-
-    private getCachedPath(x: number, y: number, width: number, height: number): Path2D {
-        const key = `${x},${y},${width},${height}`
-        let path = this.pathCache.get(key)
-        if (!path) {
-            path = new Path2D()
-            path.rect(x, y, width, height)
-            this.pathCache.set(key, path)
-        }
-        return path
-    }
 
     constructor(mmToPixel: number) {
         this.mmToPixel = mmToPixel
@@ -163,10 +150,8 @@ export class DrawCompanyUtils {
             ctx.scale(company.compression, 1)
 
             // 创建文字路径
-            const path = this.getCachedPath(-fontSize/2, -fontSize, fontSize, fontSize)
             this.textPaths.push({
                 text: char,
-                path: path,
                 type: 'company',
                 bounds: {
                     x: x - fontSize/2,
@@ -197,10 +182,8 @@ export class DrawCompanyUtils {
             ctx.scale(company.compression, 1)
 
             // 创建文字路径
-            const path = this.getCachedPath(-fontSize/2, -fontSize, fontSize, fontSize)
             this.textPaths.push({
                 text: char,
-                path: path,
                 type: 'company',
                 bounds: {
                     x: x - fontSize/2,
@@ -399,10 +382,8 @@ export class DrawCompanyUtils {
                     ctx.scale(compression, 1)
 
                     const metrics = ctx.measureText(char)
-                    const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                     this.textPaths.push({
                         text: char,
-                        path: path,
                         type: 'company',
                         bounds: {
                             x: x - metrics.width / 2,
@@ -457,10 +438,8 @@ export class DrawCompanyUtils {
                     ctx.scale(compression, 1)
 
                     const metrics = ctx.measureText(char)
-                    const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                     this.textPaths.push({
                         text: char,
-                        path: path,
                         type: 'company',
                         bounds: {
                             x: charX - metrics.width / 2,
@@ -549,10 +528,8 @@ export class DrawCompanyUtils {
 
                 // 创建文字路径
                 const metrics = ctx.measureText(char)
-                const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                 this.textPaths.push({
                     text: char,
-                    path: path,
                     type: 'company',
                     bounds: {
                         x: x - metrics.width / 2,
@@ -584,10 +561,8 @@ export class DrawCompanyUtils {
 
                 // 创建文字路径
                 const metrics = ctx.measureText(char)
-                const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                 this.textPaths.push({
                     text: char,
-                    path: path,
                     type: 'company',
                     bounds: {
                         x: charX - metrics.width / 2,
@@ -704,10 +679,8 @@ export class DrawCompanyUtils {
                     ctx.scale(compression, 1)
 
                     const metrics = ctx.measureText(char)
-                    const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                     this.textPaths.push({
                         text: char,
-                        path: path,
                         type: 'company',
                         bounds: {
                             x: charY - metrics.width / 2,
@@ -752,10 +725,8 @@ export class DrawCompanyUtils {
                     ctx.scale(compression, 1)
 
                     const metrics = ctx.measureText(char)
-                    const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                     this.textPaths.push({
                         text: char,
-                        path: path,
                         type: 'company',
                         bounds: {
                             x: columnX - metrics.width / 2,
@@ -836,10 +807,8 @@ export class DrawCompanyUtils {
 
                 // 创建文字路径
                 const metrics = ctx.measureText(char)
-                const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                 this.textPaths.push({
                     text: char,
-                    path: path,
                     type: 'company',
                     bounds: {
                         x: charY - metrics.width / 2,
@@ -867,10 +836,8 @@ export class DrawCompanyUtils {
 
                 // 创建文字路径
                 const metrics = ctx.measureText(char)
-                const path = this.getCachedPath(-metrics.width / 2, -fontSize / 2, metrics.width, fontSize)
                 this.textPaths.push({
                     text: char,
-                    path: path,
                     type: 'company',
                     bounds: {
                         x: x - metrics.width / 2,

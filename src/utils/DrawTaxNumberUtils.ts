@@ -5,7 +5,7 @@ export class DrawTaxNumberUtils {
     // 添加存储文字路径的数组
     private textPaths: Array<{
         text: string,
-        path: Path2D,
+
         type: 'taxNumber',
         bounds: {
             x: number,
@@ -78,7 +78,6 @@ export class DrawTaxNumberUtils {
             this.textPaths.push({
                 text: char,
                 type: 'taxNumber',
-                path: new Path2D(),
                 bounds: {
                     x: x - (charWidth * taxNumber.compression) / 2,
                     y: adjustedCenterY - fontSize / 2,

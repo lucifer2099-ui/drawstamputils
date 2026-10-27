@@ -76,12 +76,10 @@ describe('DrawTaxNumberUtils', () => {
         expect(paths).toHaveLength(2);
         expect(paths[0].text).toBe('1');
         expect(paths[0].type).toBe('taxNumber');
-        expect(paths[0].path).toBeInstanceOf(MockPath2D);
         expect(paths[0].bounds).toBeDefined();
 
         expect(paths[1].text).toBe('2');
         expect(paths[1].type).toBe('taxNumber');
-        expect(paths[1].path).toBeInstanceOf(MockPath2D);
     });
 
     it('handles compression properly', () => {

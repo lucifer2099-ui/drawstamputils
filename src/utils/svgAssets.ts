@@ -9,7 +9,7 @@ type SvgAsset = {
   content: string
 }
 
-const svgAssets: SvgAsset[] = Object.entries(svgModules).map(([path, content]) => {
+export function parseSvgAsset(path: string, content: unknown): SvgAsset {
   const filename = path.split('/').pop() || 'unknown.svg'
   const name = filename.replace(/\.svg$/i, '')
   return {
@@ -17,9 +17,12 @@ const svgAssets: SvgAsset[] = Object.entries(svgModules).map(([path, content]) =
     name,
     content: content as string
   }
-})
+}
+
+const svgAssets: SvgAsset[] = Object.entries(svgModules).map(([path, content]) =>
+  parseSvgAsset(path, content)
+)
 
 export function getSvgAssets() {
   return svgAssets
 }
-

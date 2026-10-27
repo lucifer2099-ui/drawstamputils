@@ -119,7 +119,8 @@ export class DrawCompanyUtils {
             halfCharCount = (characterCount + 1) / 2
           }
       
-          characters.forEach((char, index) => {
+          let cumulativeWidth = 0
+            characters.forEach((char, index) => {
             // 计算当前字符的角度，包含椭圆调整
             const halfIndex = halfCharCount - index - 1
             const adjustmentFactor = Math.pow(halfIndex / halfCharCount, 2)
@@ -164,7 +165,8 @@ export class DrawCompanyUtils {
           })
         } else {
           // 不调整椭圆文字时的正常绘制
-          characters.forEach((char, index) => {
+          let cumulativeWidth = 0
+            characters.forEach((char, index) => {
             const angle = startAngle + direction * anglePerChar * (index + 0.5)
             
             const x = centerX + Math.cos(angle) * (radiusX - fontSize - borderOffset)
@@ -251,7 +253,8 @@ export class DrawCompanyUtils {
                 textMargin,
                 textPosition,
                 textAlignment,
-                company.compression
+                company.compression,
+                company
             )
         } else {
             // 纵向绘制
@@ -288,7 +291,8 @@ export class DrawCompanyUtils {
         textMargin: number,
         position: 'top' | 'bottom' | 'left' | 'right' | 'center',
         alignment: 'left' | 'center' | 'right',
-        compression: number
+        compression: number,
+        company: ICompany
     ) {
         ctx.textBaseline = 'middle'
         ctx.textAlign = 'center'
@@ -348,11 +352,13 @@ export class DrawCompanyUtils {
                 const lineChars = line.split('')
                 
                 // 计算行的总宽度
+                let lineTotalWidth = 0
                 const lineCharWidths = lineChars.map(char => {
                     const metrics = ctx.measureText(char)
-                    return metrics.width * compression
+                    const width = metrics.width * compression
+                    lineTotalWidth += width
+                    return width
                 })
-                const lineTotalWidth = lineCharWidths.reduce((sum, w) => sum + w, 0)
 
                 // 根据对齐方式计算起始X坐标
                 let lineStartX = centerX
@@ -364,9 +370,14 @@ export class DrawCompanyUtils {
                     lineStartX = centerX - lineTotalWidth / 2
                 }
 
+                let cumulativeWidth = 0
                 lineChars.forEach((char, charIndex) => {
                     const charWidth = lineCharWidths[charIndex]
-                    const charX = lineStartX + lineCharWidths.slice(0, charIndex).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                    let cumulativeWidth = 0
+                    for (let i = 0; i < charIndex; i++) {
+                        cumulativeWidth += lineCharWidths[i]
+                    }
+                    const charX = lineStartX + cumulativeWidth + charWidth / 2
 
                     ctx.save()
                     ctx.translate(x, charX)
@@ -403,11 +414,13 @@ export class DrawCompanyUtils {
                 const lineChars = line.split('')
                 
                 // 计算行的总宽度
+                let lineTotalWidth = 0
                 const lineCharWidths = lineChars.map(char => {
                     const metrics = ctx.measureText(char)
-                    return metrics.width * compression
+                    const width = metrics.width * compression
+                    lineTotalWidth += width
+                    return width
                 })
-                const lineTotalWidth = lineCharWidths.reduce((sum, w) => sum + w, 0)
 
                 // 根据对齐方式计算起始X坐标
                 let lineStartX = centerX
@@ -419,9 +432,14 @@ export class DrawCompanyUtils {
                     lineStartX = centerX - lineTotalWidth / 2
                 }
 
+                let cumulativeWidth = 0
                 lineChars.forEach((char, charIndex) => {
                     const charWidth = lineCharWidths[charIndex]
-                    const charX = lineStartX + lineCharWidths.slice(0, charIndex).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                    let cumulativeWidth = 0
+                    for (let i = 0; i < charIndex; i++) {
+                        cumulativeWidth += lineCharWidths[i]
+                    }
+                    const charX = lineStartX + cumulativeWidth + charWidth / 2
 
                     ctx.save()
                     ctx.translate(charX, lineY)
@@ -473,11 +491,13 @@ export class DrawCompanyUtils {
         ctx.textBaseline = 'middle'
 
         // 计算文字总宽度
+        let totalWidth = 0
         const charWidths = characters.map(char => {
             const metrics = ctx.measureText(char)
-            return metrics.width * compression
+            const width = metrics.width * compression
+            totalWidth += width
+            return width
         })
-        const totalWidth = charWidths.reduce((sum, width) => sum + width, 0)
 
         // 根据位置计算Y坐标
         let y = centerY
@@ -505,9 +525,14 @@ export class DrawCompanyUtils {
                 ? centerX - rectWidth / 2 + borderOffset + fontSize / 2
                 : centerX + rectWidth / 2 - borderOffset - fontSize / 2
 
+            let cumulativeWidth = 0
             characters.forEach((char, index) => {
                 const charWidth = charWidths[index]
-                const charX = startX + charWidths.slice(0, index).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                let cumulativeWidth = 0
+                for (let i = 0; i < index; i++) {
+                    cumulativeWidth += charWidths[i]
+                }
+                const charX = startX + cumulativeWidth + charWidth / 2
 
                 ctx.save()
                 ctx.translate(x, charX)
@@ -539,9 +564,14 @@ export class DrawCompanyUtils {
             })
         } else {
             // 顶部、底部或中心位置，正常横向绘制
+            let cumulativeWidth = 0
             characters.forEach((char, index) => {
                 const charWidth = charWidths[index]
-                const charX = startX + charWidths.slice(0, index).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                let cumulativeWidth = 0
+                for (let i = 0; i < index; i++) {
+                    cumulativeWidth += charWidths[i]
+                }
+                const charX = startX + cumulativeWidth + charWidth / 2
 
                 ctx.save()
                 ctx.translate(charX, y)
@@ -795,6 +825,7 @@ export class DrawCompanyUtils {
                 ? centerY - rectHeight / 2 + borderOffset + fontSize / 2
                 : centerY + rectHeight / 2 - borderOffset - fontSize / 2
 
+            let cumulativeWidth = 0
             characters.forEach((char, index) => {
                 const charY = startY + index * (fontSize + lineSpacing)
 
@@ -828,6 +859,7 @@ export class DrawCompanyUtils {
             })
         } else {
             // 左右位置，正常纵向绘制
+            let cumulativeWidth = 0
             characters.forEach((char, index) => {
                 const charY = startY + index * (fontSize + lineSpacing)
 

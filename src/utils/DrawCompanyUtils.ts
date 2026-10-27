@@ -95,6 +95,15 @@ export class DrawCompanyUtils {
         ctx.textBaseline = 'bottom'
       
         const characters = company.companyName.split('')
+        const charWidthCache = new Map<string, number>()
+        const getCharWidth = (char: string) => {
+            let width = charWidthCache.get(char)
+            if (width === undefined) {
+                width = ctx.measureText(char).width
+                charWidthCache.set(char, width)
+            }
+            return width
+        }
         const characterCount = characters.length
         const borderOffset = company.borderOffset * this.mmToPixel
       
@@ -153,8 +162,8 @@ export class DrawCompanyUtils {
             })
 
             ctx.fillText(char, 0, 0)
-            if (company.drawAging) {
-                const charWidth = ctx.measureText(char).width;
+            if (typeof company !== "undefined" && company.drawAging) {
+                const charWidth = getCharWidth(char);
                 this.applyTextAgingAt(ctx, fontSize, 'bottom', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
             }
             ctx.restore()
@@ -185,8 +194,8 @@ export class DrawCompanyUtils {
             })
 
             ctx.fillText(char, 0, 0)
-            if (company.drawAging) {
-                const charWidth = ctx.measureText(char).width;
+            if (typeof company !== "undefined" && company.drawAging) {
+                const charWidth = getCharWidth(char);
                 this.applyTextAgingAt(ctx, fontSize, 'bottom', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
             }
             ctx.restore()
@@ -342,11 +351,14 @@ export class DrawCompanyUtils {
                 const lineChars = line.split('')
                 
                 // 计算行的总宽度
-                const lineCharWidths = lineChars.map(char => {
-                    const metrics = ctx.measureText(char)
-                    return metrics.width * compression
-                })
-                const lineTotalWidth = lineCharWidths.reduce((sum, w) => sum + w, 0)
+                const lineCharWidths = new Array(lineChars.length)
+                let lineTotalWidth = 0
+                for (let i = 0; i < lineChars.length; i++) {
+                    const metrics = ctx.measureText(lineChars[i])
+                    const w = metrics.width * compression
+                    lineCharWidths[i] = w
+                    lineTotalWidth += w
+                }
 
                 // 根据对齐方式计算起始X坐标
                 let lineStartX = centerX
@@ -358,9 +370,11 @@ export class DrawCompanyUtils {
                     lineStartX = centerX - lineTotalWidth / 2
                 }
 
+                let currentWidth = 0
                 lineChars.forEach((char, charIndex) => {
                     const charWidth = lineCharWidths[charIndex]
-                    const charX = lineStartX + lineCharWidths.slice(0, charIndex).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                    const charX = lineStartX + currentWidth + charWidth / 2
+                    currentWidth += charWidth
 
                     ctx.save()
                     ctx.translate(x, charX)
@@ -380,8 +394,8 @@ export class DrawCompanyUtils {
                     })
 
                     ctx.fillText(char, 0, 0)
-                    if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                    if (typeof company !== "undefined" && company.drawAging) {
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -394,11 +408,14 @@ export class DrawCompanyUtils {
                 const lineChars = line.split('')
                 
                 // 计算行的总宽度
-                const lineCharWidths = lineChars.map(char => {
-                    const metrics = ctx.measureText(char)
-                    return metrics.width * compression
-                })
-                const lineTotalWidth = lineCharWidths.reduce((sum, w) => sum + w, 0)
+                const lineCharWidths = new Array(lineChars.length)
+                let lineTotalWidth = 0
+                for (let i = 0; i < lineChars.length; i++) {
+                    const metrics = ctx.measureText(lineChars[i])
+                    const w = metrics.width * compression
+                    lineCharWidths[i] = w
+                    lineTotalWidth += w
+                }
 
                 // 根据对齐方式计算起始X坐标
                 let lineStartX = centerX
@@ -410,9 +427,11 @@ export class DrawCompanyUtils {
                     lineStartX = centerX - lineTotalWidth / 2
                 }
 
+                let currentWidth = 0
                 lineChars.forEach((char, charIndex) => {
                     const charWidth = lineCharWidths[charIndex]
-                    const charX = lineStartX + lineCharWidths.slice(0, charIndex).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                    const charX = lineStartX + currentWidth + charWidth / 2
+                    currentWidth += charWidth
 
                     ctx.save()
                     ctx.translate(charX, lineY)
@@ -431,8 +450,8 @@ export class DrawCompanyUtils {
                     })
 
                     ctx.fillText(char, 0, 0)
-                    if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                    if (typeof company !== "undefined" && company.drawAging) {
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -461,11 +480,14 @@ export class DrawCompanyUtils {
         ctx.textBaseline = 'middle'
 
         // 计算文字总宽度
-        const charWidths = characters.map(char => {
-            const metrics = ctx.measureText(char)
-            return metrics.width * compression
-        })
-        const totalWidth = charWidths.reduce((sum, width) => sum + width, 0)
+        const charWidths = new Array(characters.length)
+        let totalWidth = 0
+        for (let i = 0; i < characters.length; i++) {
+            const metrics = ctx.measureText(characters[i])
+            const w = metrics.width * compression
+            charWidths[i] = w
+            totalWidth += w
+        }
 
         // 根据位置计算Y坐标
         let y = centerY
@@ -493,9 +515,11 @@ export class DrawCompanyUtils {
                 ? centerX - rectWidth / 2 + borderOffset + fontSize / 2
                 : centerX + rectWidth / 2 - borderOffset - fontSize / 2
 
+            let currentWidth = 0
             characters.forEach((char, index) => {
                 const charWidth = charWidths[index]
-                const charX = startX + charWidths.slice(0, index).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                const charX = startX + currentWidth + charWidth / 2
+                currentWidth += charWidth
 
                 ctx.save()
                 ctx.translate(x, charX)
@@ -516,17 +540,19 @@ export class DrawCompanyUtils {
                 })
 
                 ctx.fillText(char, 0, 0)
-                if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                if (typeof company !== "undefined" && company.drawAging) {
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()
             })
         } else {
             // 顶部、底部或中心位置，正常横向绘制
+            let currentWidth = 0
             characters.forEach((char, index) => {
                 const charWidth = charWidths[index]
-                const charX = startX + charWidths.slice(0, index).reduce((sum, w) => sum + w, 0) + charWidth / 2
+                const charX = startX + currentWidth + charWidth / 2
+                currentWidth += charWidth
 
                 ctx.save()
                 ctx.translate(charX, y)
@@ -547,8 +573,8 @@ export class DrawCompanyUtils {
                 })
 
                 ctx.fillText(char, 0, 0)
-                if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                if (typeof company !== "undefined" && company.drawAging) {
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()
@@ -665,8 +691,8 @@ export class DrawCompanyUtils {
                     })
 
                     ctx.fillText(char, 0, 0)
-                    if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                    if (typeof company !== "undefined" && company.drawAging) {
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -711,8 +737,8 @@ export class DrawCompanyUtils {
                     })
 
                     ctx.fillText(char, 0, 0)
-                    if (company.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
+                    if (typeof company !== "undefined" && company.drawAging) {
+                        const charWidth = metrics.width;
                         this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                     }
                     ctx.restore()
@@ -793,8 +819,8 @@ export class DrawCompanyUtils {
                 })
 
                 ctx.fillText(char, 0, 0)
-                if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                if (typeof company !== "undefined" && company.drawAging) {
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()
@@ -822,8 +848,8 @@ export class DrawCompanyUtils {
                 })
 
                 ctx.fillText(char, 0, 0)
-                if (company.drawAging) {
-                    const charWidth = ctx.measureText(char).width;
+                if (typeof company !== "undefined" && company.drawAging) {
+                    const charWidth = metrics.width;
                     this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
                 }
                 ctx.restore()

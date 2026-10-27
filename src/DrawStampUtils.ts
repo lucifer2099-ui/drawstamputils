@@ -859,7 +859,9 @@ export class DrawStampUtils {
                 const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${outputCanvas.width}" height="${outputCanvas.height}">
   <image href="${pngDataURL}" width="${outputCanvas.width}" height="${outputCanvas.height}"/>
 </svg>`
-                dataURL = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`
+                const bytes = new TextEncoder().encode(svgContent);
+                const binString = Array.from(bytes).map(b => String.fromCharCode(b)).join('');
+                dataURL = `data:image/svg+xml;base64,${btoa(binString)}`
                 filename = 'mystamp.svg'
             } else if (format === 'jpeg') {
                 // JPEG 格式，需要白色背景
@@ -978,7 +980,9 @@ export class DrawStampUtils {
                     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${outputCanvas.width}" height="${outputCanvas.height}">
   <image href="${pngDataURL}" width="${outputCanvas.width}" height="${outputCanvas.height}"/>
 </svg>`
-                    dataURL = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`
+                    const bytes = new TextEncoder().encode(svgContent);
+                    const binString = Array.from(bytes).map(b => String.fromCharCode(b)).join('');
+                    dataURL = `data:image/svg+xml;base64,${btoa(binString)}`
                 } else if (format === 'jpeg') {
                     const tempCanvas = document.createElement('canvas')
                     tempCanvas.width = outputCanvas.width

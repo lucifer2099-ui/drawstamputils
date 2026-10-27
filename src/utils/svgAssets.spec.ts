@@ -46,6 +46,7 @@ describe('svgAssets', () => {
       expect(typeof firstAsset.key).toBe('string')
       expect(typeof firstAsset.name).toBe('string')
       expect(typeof firstAsset.content).toBe('string')
+      expect(firstAsset.key).toMatch(/\.svg$/)
     })
   })
 })

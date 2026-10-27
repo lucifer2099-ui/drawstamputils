@@ -1,6 +1,7 @@
 export class DrawImageCanvas {
     private imageCanvas: HTMLCanvasElement;
     private imageCtx: CanvasRenderingContext2D;
+    private imageCache: Map<string, HTMLImageElement> = new Map();
 
     constructor(width: number, height: number) {
         // 创建新的 canvas 用于图像绘制
@@ -28,37 +29,51 @@ export class DrawImageCanvas {
         // 清除之前的内容
         this.imageCtx.clearRect(0, 0, this.imageCanvas.width, this.imageCanvas.height);
 
-        // 使用 DOMParser 来安全地解析 SVG 内容
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(svgContent, 'image/svg+xml');
-        const svgElement = doc.querySelector('svg');
-        
-        if (!svgElement) {
-            throw new Error('Invalid SVG content');
-        }
+        const cacheKey = `${svgContent}_${width}_${height}`;
+        let img = this.imageCache.get(cacheKey);
 
-        // 确保 SVG 有宽高属性
-        if (!svgElement.hasAttribute('width')) {
-            svgElement.setAttribute('width', width.toString());
-        }
-        if (!svgElement.hasAttribute('height')) {
-            svgElement.setAttribute('height', height.toString());
-        }
+        if (!img) {
+            // 使用 DOMParser 来安全地解析 SVG 内容
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+            const svgElement = doc.querySelector('svg');
 
-        // 将 SVG 转换为 base64
-        const svgString = new XMLSerializer().serializeToString(svgElement);
-        const bytes = new TextEncoder().encode(svgString);
-        const binString = Array.from(bytes).map(b => String.fromCharCode(b)).join('');
-        const base64Data = btoa(binString);
-        const base64Url = `data:image/svg+xml;base64,${base64Data}`;
+            if (!svgElement) {
+                throw new Error('Invalid SVG content');
+            }
 
-        // 创建图片并加载
-        const img = new Image();
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-            img.src = base64Url;
-        });
+            // 确保 SVG 有宽高属性
+            if (!svgElement.hasAttribute('width')) {
+                svgElement.setAttribute('width', width.toString());
+            }
+            if (!svgElement.hasAttribute('height')) {
+                svgElement.setAttribute('height', height.toString());
+            }
+
+            // 将 SVG 转换为 base64
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const bytes = new TextEncoder().encode(svgString);
+            const binaryString = Array.from(bytes).map(b => String.fromCharCode(b)).join('');
+            const base64Data = btoa(binaryString);
+            const base64Url = `data:image/svg+xml;base64,${base64Data}`;
+
+            // 创建图片并加载
+            img = new Image();
+            await new Promise((resolve, reject) => {
+                img!.onload = resolve;
+                img!.onerror = reject;
+                img!.src = base64Url;
+            });
+
+            // 限制缓存大小
+            if (this.imageCache.size >= 100) {
+                const firstKey = this.imageCache.keys().next().value;
+                if (firstKey) {
+                    this.imageCache.delete(firstKey);
+                }
+            }
+            this.imageCache.set(cacheKey, img);
+        }
 
         // 绘制图片到图像 canvas
         this.imageCtx.drawImage(img, x, y, width, height);

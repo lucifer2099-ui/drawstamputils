@@ -93,5 +93,10 @@ describe('fontUtils', () => {
     it('should return original name for unknown fonts', () => {
       expect(getFontDisplayName('UnknownFont123')).toBe('UnknownFont123');
     });
+
+    it('should handle edge cases like empty string or whitespace', () => {
+      expect(getFontDisplayName('')).toBe('');
+      expect(getFontDisplayName(' ')).toBe(' ');
+    });
   });
 });

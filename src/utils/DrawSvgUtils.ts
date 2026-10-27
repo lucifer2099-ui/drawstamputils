@@ -57,7 +57,9 @@ export class DrawSvgUtils {
 
             // 将 SVG 转换为 base64
             const svgString = new XMLSerializer().serializeToString(svgElement);
-            const base64Data = btoa(unescape(encodeURIComponent(svgString)));
+            const bytes = new TextEncoder().encode(svgString);
+            const binString = Array.from(bytes).map(b => String.fromCharCode(b)).join('');
+            const base64Data = btoa(binString);
             const base64Url = `data:image/svg+xml;base64,${base64Data}`;
             const tempImg = new Image();
             tempImg.src = base64Url;

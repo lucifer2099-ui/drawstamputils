@@ -5,7 +5,7 @@ export class DrawStampTypeUtils {
     // 添加存储文字路径的数组
     private textPaths: Array<{
         text: string,
-        path: Path2D,
+
         type: 'stampType',
         bounds: {
             x: number,
@@ -109,7 +109,6 @@ export class DrawStampTypeUtils {
                     this.textPaths.push({
                         text: char,
                         type: 'stampType',
-                        path: new Path2D(),
                         bounds: {
                             x: columnX - charWidth / 2,
                             y: charY - fontSize / 2,
@@ -158,7 +157,6 @@ export class DrawStampTypeUtils {
                     this.textPaths.push({
                         text: char,
                         type: 'stampType',
-                        path: new Path2D(),
                         bounds: {
                             x: centerX + offsetX + charX * stampType.compression - charWidth / 2,
                             y: textY - fontSize / 2,

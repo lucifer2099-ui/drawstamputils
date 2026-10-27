@@ -6,7 +6,7 @@ export class DrawCodeUtils {
     private textPaths: Array<{
         text: string,
         type: 'code',
-        path: Path2D,
+
         bounds: {
             x: number,
             y: number,
@@ -67,7 +67,6 @@ export class DrawCodeUtils {
             this.textPaths.push({
                 text,
                 type: 'code',
-                path: new Path2D(),
                 bounds: {
                     x: x - (metrics.width * code.compression) / 2,
                     y: y - fontSize / 2,
@@ -99,7 +98,6 @@ export class DrawCodeUtils {
                 this.textPaths.push({
                     text: char,
                     type: 'code',
-                    path: new Path2D(),
                     bounds: {
                         x: x - (metrics.width * code.compression) / 2,
                         y: y - fontSize / 2,

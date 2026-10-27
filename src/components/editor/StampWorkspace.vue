@@ -700,30 +700,50 @@ const updateFontPreview = (event: Event) => {
   }
 }
 
+// 记录 requestAnimationFrame 的 ID，用于节流
+let animationFrameId: number | null = null
+
 // 添加鼠标移动检测
 const handleMouseMove = (event: MouseEvent) => {
   if (!drawStampUtils?.canvas) return
 
-  const rect = drawStampUtils.canvas.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+  }
 
-  // 检查是否悬停在文字上
-  let isOverText = false
-  for (const textPath of allTextPaths) {
-    if (x >= textPath.bounds.x &&
-        x <= textPath.bounds.x + textPath.bounds.width &&
-        y >= textPath.bounds.y &&
-        y <= textPath.bounds.y + textPath.bounds.height) {
-      isOverText = true
-      drawStampUtils.canvas.style.cursor = 'pointer'
-      return
+  // 捕获当前的 clientX 和 clientY
+  const clientX = event.clientX
+  const clientY = event.clientY
+
+  animationFrameId = requestAnimationFrame(() => {
+    animationFrameId = null
+    if (!drawStampUtils?.canvas) return
+
+    const rect = drawStampUtils.canvas.getBoundingClientRect()
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+
+    // 检查是否悬停在文字上
+    let isOverText = false
+    for (const textPath of allTextPaths) {
+      if (x >= textPath.bounds.x &&
+          x <= textPath.bounds.x + textPath.bounds.width &&
+          y >= textPath.bounds.y &&
+          y <= textPath.bounds.y + textPath.bounds.height) {
+        isOverText = true
+        if (drawStampUtils.canvas.style.cursor !== 'pointer') {
+          drawStampUtils.canvas.style.cursor = 'pointer'
+        }
+        return
+      }
     }
-  }
 
-  if (!isOverText) {
-    drawStampUtils.canvas.style.cursor = 'default'
-  }
+    if (!isOverText) {
+      if (drawStampUtils.canvas.style.cursor !== 'default') {
+        drawStampUtils.canvas.style.cursor = 'default'
+      }
+    }
+  })
 }
 
 // 添加点击事件处理

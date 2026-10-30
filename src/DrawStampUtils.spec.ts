@@ -140,4 +140,56 @@ describe('DrawStampUtils', () => {
     expect(mockContext.translate).toHaveBeenCalled()
     expect(mockContext.scale).toHaveBeenCalled()
   })
+
+  it('catches and logs error when image loading fails in drawImageList', async () => {
+    const utils = new DrawStampUtils(mockCanvas, 10)
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    // Mock global Image to simulate load failure
+    const mockError = new Error('Mock image load failure')
+    const originalImage = global.Image
+
+    // Need to trigger the load/error immediately when properties are set
+    // But in jsdom global.Image might have other logic.
+    // Let's completely mock the global.Image with a factory function that returns our proxy.
+    global.Image = vi.fn().mockImplementation(() => {
+      let _onerror: any = null;
+      let _onload: any = null;
+      return {
+        get src() { return '' },
+        set src(val) {
+           // Immediately after setting src, we assume they will set onload/onerror.
+           // In original code, src is set first, then onload/onerror are assigned.
+           // To handle this, we can wait a microtask or intercept the onerror setter.
+        },
+        get onerror() { return _onerror },
+        set onerror(val) {
+          _onerror = val;
+          if (val) {
+             Promise.resolve().then(() => val(mockError));
+          }
+        },
+        get onload() { return _onload },
+        set onload(val) { _onload = val }
+      }
+    }) as any
+
+    const mockImageList = [{
+      imageUrl: 'invalid.png',
+      imageWidth: 10,
+      imageHeight: 10,
+      positionX: 0,
+      positionY: 0,
+      keepAspectRatio: true
+    }]
+
+    // Call private drawImageList
+    await (utils as any).drawImageList(mockContext, mockImageList, 0, 0)
+
+    expect(errorSpy).toHaveBeenCalledWith("Error loading or processing image:", mockError)
+
+    // Cleanup
+    errorSpy.mockRestore()
+    global.Image = originalImage
+  })
 })

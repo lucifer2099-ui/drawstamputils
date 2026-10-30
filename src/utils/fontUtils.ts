@@ -174,64 +174,82 @@ function getChineseFonts(): string[] {
   ];
 }
 
+let cachedFonts: string[] | null = null;
+let fontPromise: Promise<string[]> | null = null;
+
+export function clearFontCache() {
+  cachedFonts = null;
+  fontPromise = null;
+}
+
 export async function getSystemFonts(): Promise<string[]> {
-  try {
-    // 获取常用中文字体列表
-    const chineseFonts = getChineseFonts();
-    
-    // 使用 FontFace API 获取可用字体
-    // @ts-ignore
-    if (window.queryLocalFonts) {
+  if (cachedFonts) return cachedFonts;
+  if (fontPromise) return fontPromise;
+
+  fontPromise = (async () => {
+    try {
+      // 获取常用中文字体列表
+      const chineseFonts = getChineseFonts();
+
+      // 使用 FontFace API 获取可用字体
       // @ts-ignore
-      const availableFonts = await window.queryLocalFonts();
-      const systemFonts: string[] = Array.from(new Set(availableFonts.map((font: any) => String(font.family))));
-      // 合并系统字体和常用中文字体，确保中文字体可用
-      const allFonts: string[] = Array.from(new Set([...chineseFonts, ...systemFonts]));
-      return allFonts.sort();
-    } else {
-      // 降级方案：返回常用中文字体列表 + 常用英文字体
-      return [
-        ...chineseFonts,
+      if (window.queryLocalFonts) {
+        // @ts-ignore
+        const availableFonts = await window.queryLocalFonts();
+        const systemFonts: string[] = Array.from(new Set(availableFonts.map((font: any) => String(font.family))));
+        // 合并系统字体和常用中文字体，确保中文字体可用
+        const allFonts: string[] = Array.from(new Set([...chineseFonts, ...systemFonts]));
+        cachedFonts = allFonts.sort();
+        return cachedFonts;
+      } else {
+        // 降级方案：返回常用中文字体列表 + 常用英文字体
+        cachedFonts = [
+          ...chineseFonts,
+          // 常用英文字体
+          'Arial',
+          'Times New Roman',
+          'Helvetica',
+          'Courier New',
+          'Verdana',
+          'Georgia',
+          'Tahoma',
+          'Trebuchet MS',
+          'Comic Sans MS',
+          'Impact',
+          'Lucida Console',
+          'Lucida Sans Unicode',
+          'Palatino Linotype',
+          'Garamond',
+          'Bookman Old Style',
+          'Century Gothic',
+          'Franklin Gothic Medium'
+        ];
+        return cachedFonts;
+      }
+    } catch (error) {
+      console.error('获取系统字体失败:', error);
+      // 返回最常用的中文字体和英文字体
+      cachedFonts = [
+        // GB2312 国标字体
+        'SimSun', // 宋体 (GB2312)
+        'SimHei', // 黑体 (GB2312)
+        'KaiTi_GB2312', // 楷体_GB2312
+        'FangSong_GB2312', // 仿宋_GB2312
+        // 常用中文字体
+        'Microsoft YaHei', // 微软雅黑
+        'KaiTi', // 楷体
+        'FangSong', // 仿宋
+        'STHeiti', // 华文黑体
+        'STKaiti', // 华文楷体
+        'STSong', // 华文宋体
         // 常用英文字体
         'Arial',
         'Times New Roman',
-        'Helvetica',
-        'Courier New',
-        'Verdana',
-        'Georgia',
-        'Tahoma',
-        'Trebuchet MS',
-        'Comic Sans MS',
-        'Impact',
-        'Lucida Console',
-        'Lucida Sans Unicode',
-        'Palatino Linotype',
-        'Garamond',
-        'Bookman Old Style',
-        'Century Gothic',
-        'Franklin Gothic Medium'
+        'Helvetica'
       ];
+      return cachedFonts;
     }
-  } catch (error) {
-    console.error('获取系统字体失败:', error);
-    // 返回最常用的中文字体和英文字体
-    return [
-      // GB2312 国标字体
-      'SimSun', // 宋体 (GB2312)
-      'SimHei', // 黑体 (GB2312)
-      'KaiTi_GB2312', // 楷体_GB2312
-      'FangSong_GB2312', // 仿宋_GB2312
-      // 常用中文字体
-      'Microsoft YaHei', // 微软雅黑
-      'KaiTi', // 楷体
-      'FangSong', // 仿宋
-      'STHeiti', // 华文黑体
-      'STKaiti', // 华文楷体
-      'STSong', // 华文宋体
-      // 常用英文字体
-      'Arial',
-      'Times New Roman',
-      'Helvetica'
-    ];
-  }
+  })();
+
+  return fontPromise;
 } 

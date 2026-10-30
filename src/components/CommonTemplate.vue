@@ -115,7 +115,6 @@ const loadTemplatesFromStorage = async () => {
     // 生成预览图
     template.preview = tempCanvas.toDataURL('image/png')
   }))
-  console.log("defaultTemplates", defaultTemplates)
   setTimeout(() => {
     emit('updateTemplates', defaultTemplates)
   }, 500)

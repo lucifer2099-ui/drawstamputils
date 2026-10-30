@@ -307,40 +307,49 @@ export class DrawStampUtils {
         centerX: number,
         centerY: number
     ) {
+        // 先找出所有未缓存的独特 URL，避免重复请求并并发加载
+        const uncachedUrls = new Set<string>();
+        for (const image of imageList) {
+            if (image.imageUrl && !this.imageCache.has(image.imageUrl)) {
+                uncachedUrls.add(image.imageUrl);
+            }
+        }
+
+        if (uncachedUrls.size > 0) {
+            let hasNewLoads = false;
+            const loadPromises = Array.from(uncachedUrls).map(async (url) => {
+                try {
+                    const tempImg = new Image();
+                    tempImg.src = url;
+
+                    await new Promise((resolve, reject) => {
+                        tempImg.onload = resolve;
+                        tempImg.onerror = reject;
+                    });
+
+                    const bitmap = await createImageBitmap(tempImg);
+                    this.imageCache.set(url, bitmap);
+                    hasNewLoads = true;
+                } catch (error) {
+                    console.error("Error loading or processing image:", error);
+                }
+            });
+
+            await Promise.all(loadPromises);
+
+            if (hasNewLoads) {
+                requestAnimationFrame(() => {
+                    this.refreshStamp();
+                });
+            }
+        }
+
+        // 按顺序绘制以保证 Z-order 正确
         for (const image of imageList) {
             if (image.imageUrl) {
-                // 检查缓存中是否已有该图片
-                let img = this.imageCache.get(image.imageUrl);
-
+                const img = this.imageCache.get(image.imageUrl);
                 if (img) {
                     this.drawSingleImage(ctx, img, image, centerX, centerY);
-                } else {
-                    try {
-                        // 创建一个新的图片对象
-                        const tempImg = new Image();
-                        tempImg.src = image.imageUrl;
-
-                        // 等待图片加载完成
-                        await new Promise((resolve, reject) => {
-                            tempImg.onload = resolve;
-                            tempImg.onerror = reject;
-                        });
-
-                        // 将图片转换为 ImageBitmap
-                        const bitmap = await createImageBitmap(tempImg);
-
-                        // 存入缓存
-                        this.imageCache.set(image.imageUrl, bitmap);
-
-                        // 绘制图片
-                        this.drawSingleImage(ctx, bitmap, image, centerX, centerY);
-
-                        requestAnimationFrame(() => {
-                            this.refreshStamp();
-                        });
-                    } catch (error) {
-                        console.error("Error loading or processing image:", error);
-                    }
                 }
             }
         }

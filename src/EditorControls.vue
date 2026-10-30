@@ -360,7 +360,6 @@ const handleIsCircleDetectChange = (value: boolean) => {
 
 const handleBasicConfigUpdate = (updater: (config: IDrawStampConfig) => void) => {
   stampStore.updateConfig((config) => {
-    console.log("update config company", config.company)
     updater(config)
   })
   restoreDrawConfigs()
@@ -497,7 +496,6 @@ const handleLineConfigUpdate = (updater: (config: IDrawStampConfig) => void) => 
     try {
       const fonts = await getSystemFonts()
       systemFonts.value = fonts
-      console.log('EditorControls: 加载系统字体成功，共', fonts.length, '个字体')
     } catch (error) {
       console.error('EditorControls: 加载系统字体失败', error)
       // 即使失败也设置一个默认字体列表
@@ -507,9 +505,7 @@ const handleLineConfigUpdate = (updater: (config: IDrawStampConfig) => void) => 
 
   // 在组件挂载时加载字体
   onMounted(async () => {
-    console.log('EditorControls: onMounted drawStampUtils', props.drawStampUtils)
     await loadSystemFonts()
-    console.log('EditorControls: 系统字体列表已加载，共', systemFonts.value.length, '个字体')
     restoreDrawConfigs()
     drawStamp()
     loadPresetsFromLocalStorage()

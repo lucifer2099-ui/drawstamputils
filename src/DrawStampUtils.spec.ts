@@ -140,4 +140,26 @@ describe('DrawStampUtils', () => {
     expect(mockContext.translate).toHaveBeenCalled()
     expect(mockContext.scale).toHaveBeenCalled()
   })
+
+  it('getStampImageBase64 rejects when saveCanvas.getContext returns null', async () => {
+    const utils = new DrawStampUtils(mockCanvas, 10);
+
+    // Mock document.createElement to return a canvas with null context
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+      if (tagName === 'canvas') {
+        return {
+          width: 0,
+          height: 0,
+          getContext: vi.fn(() => null)
+        } as unknown as HTMLCanvasElement;
+      }
+      return originalCreateElement(tagName);
+    });
+
+    await expect(utils.getStampImageBase64()).rejects.toThrow('无法创建 canvas context');
+
+    vi.restoreAllMocks();
+  })
+
 })

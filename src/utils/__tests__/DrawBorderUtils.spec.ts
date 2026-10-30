@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { drawBasicBorder } from '../DrawBorderUtils';
+import { drawBasicBorder, drawOrganicBorder } from '../DrawBorderUtils';
 
 describe('drawBasicBorder', () => {
     let ctx: any;
@@ -57,6 +57,73 @@ describe('drawBasicBorder', () => {
 
     it('fills background when fillColor is provided', () => {
         drawBasicBorder(ctx, 100, 100, 50, 25, 2, 'black', 'solid', 10, 5, 'yellow');
+
+        expect(ctx.fillStyle).toBe('yellow');
+        expect(ctx.fill).toHaveBeenCalledOnce();
+    });
+});
+
+describe('drawOrganicBorder', () => {
+    let ctx: any;
+
+    beforeEach(() => {
+        ctx = {
+            beginPath: vi.fn(),
+            moveTo: vi.fn(),
+            quadraticCurveTo: vi.fn(),
+            closePath: vi.fn(),
+            fill: vi.fn(),
+            setLineDash: vi.fn(),
+            stroke: vi.fn(),
+            fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 0,
+        };
+    });
+
+    it('draws a solid organic border by default', () => {
+        drawOrganicBorder(ctx, 100, 100, 100, 50, 2, 'red');
+
+        expect(ctx.beginPath).toHaveBeenCalledOnce();
+        expect(ctx.moveTo).toHaveBeenCalledOnce();
+        // 64 points -> 64 quadraticCurveTo calls
+        expect(ctx.quadraticCurveTo).toHaveBeenCalledTimes(64);
+        expect(ctx.closePath).toHaveBeenCalledOnce();
+
+        expect(ctx.fill).not.toHaveBeenCalled();
+
+        expect(ctx.setLineDash).toHaveBeenCalledWith([]);
+        expect(ctx.strokeStyle).toBe('red');
+        expect(ctx.lineWidth).toBe(2);
+        expect(ctx.stroke).toHaveBeenCalledOnce();
+
+        // it resets line dash at the end
+        expect(ctx.setLineDash).toHaveBeenLastCalledWith([]);
+    });
+
+    it('draws a dashed border', () => {
+        drawOrganicBorder(ctx, 100, 100, 100, 50, 2, 'blue', 'dashed', 15, 10);
+
+        expect(ctx.setLineDash).toHaveBeenCalledWith([15, 10]);
+        expect(ctx.stroke).toHaveBeenCalledOnce();
+    });
+
+    it('draws a dotted border', () => {
+        drawOrganicBorder(ctx, 100, 100, 100, 50, 2, 'green', 'dotted', 2, 4);
+
+        expect(ctx.setLineDash).toHaveBeenCalledWith([2, 4]);
+        expect(ctx.stroke).toHaveBeenCalledOnce();
+    });
+
+    it('handles negative or zero dash and gap px properly', () => {
+        drawOrganicBorder(ctx, 100, 100, 100, 50, 2, 'black', 'dashed', -5, 0);
+
+        expect(ctx.setLineDash).toHaveBeenCalledWith([1, 1]); // max(1, x) is used
+        expect(ctx.stroke).toHaveBeenCalledOnce();
+    });
+
+    it('fills background when fillColor is provided', () => {
+        drawOrganicBorder(ctx, 100, 100, 100, 50, 2, 'black', 'solid', 10, 5, 'yellow');
 
         expect(ctx.fillStyle).toBe('yellow');
         expect(ctx.fill).toHaveBeenCalledOnce();

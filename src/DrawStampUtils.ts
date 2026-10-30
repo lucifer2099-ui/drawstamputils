@@ -522,9 +522,15 @@ export class DrawStampUtils {
 
         lines.forEach((line, lineIndex) => {
             const chars = line.split('')
-            const charWidths = chars.map((char) => ctx.measureText(char).width)
+            let charsTotalWidth = 0;
+            const charWidths = new Array(chars.length);
+            for (let i = 0; i < chars.length; i++) {
+                const w = ctx.measureText(chars[i]).width;
+                charWidths[i] = w;
+                charsTotalWidth += w;
+            }
             const totalWidth =
-                charWidths.reduce((sum, width) => sum + width, 0) +
+                charsTotalWidth +
                 (chars.length - 1) * letterSpacing * this.mmToPixel
 
             // 计算每行的垂直偏移，使用新的 lineSpacing
@@ -539,10 +545,10 @@ export class DrawStampUtils {
             let currentX = -totalWidth / 2 // 从文本的左边缘开始
 
             ctx.scale(stampType.compression, 1)
-            chars.forEach((char, index) => {
-                ctx.fillText(char, currentX + charWidths[index] / 2, 0) // 绘制在字符的中心
-                currentX += charWidths[index] + letterSpacing * this.mmToPixel
-            })
+            for (let i = 0; i < chars.length; i++) {
+                ctx.fillText(chars[i], currentX + charWidths[i] / 2, 0) // 绘制在字符的中心
+                currentX += charWidths[i] + letterSpacing * this.mmToPixel
+            }
 
             ctx.restore()
         });

@@ -360,7 +360,6 @@ const handleIsCircleDetectChange = (value: boolean) => {
 
 const handleBasicConfigUpdate = (updater: (config: IDrawStampConfig) => void) => {
   stampStore.updateConfig((config) => {
-    console.log("update config company", config.company)
     updater(config)
   })
   restoreDrawConfigs()

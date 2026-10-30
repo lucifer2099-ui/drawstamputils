@@ -95,7 +95,6 @@ export class DrawSvgUtils {
             ctx.lineWidth = 1;
             ctx.strokeRect(10, 10, rectSize, rectSize);
             ctx.restore();
-            console.log("draw svg base64Url")
         } catch (error) {
             console.error('Error drawing SVG:', error);
         }

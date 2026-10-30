@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getSystemFonts, getFontDisplayName } from './fontUtils';
+import { getSystemFonts, getFontDisplayName, clearSystemFontsCache } from './fontUtils';
 
 describe('fontUtils', () => {
   describe('getSystemFonts', () => {
     let originalQueryLocalFonts: any;
 
     beforeEach(() => {
+      // Clear cache before each test to ensure isolation
+      clearSystemFontsCache();
+
       // Save original window object if it exists or mock it
       if (typeof window !== 'undefined') {
         originalQueryLocalFonts = (window as any).queryLocalFonts;

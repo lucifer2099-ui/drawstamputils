@@ -73,21 +73,6 @@ export class DrawSvgUtils {
                 tempImg.onerror = reject;
             });
 
-            // 等待图片加载完成
-            // await new Promise((resolve, reject) => {
-            //     tempImg.onload = resolve;
-            //     tempImg.onerror = reject;
-            // });
-            // const bitmap = await createImageBitmap(tempImg);
-            // ctx.save();
-            // ctx.drawImage(bitmap, -svgWidth / 2, -svgHeight / 2, svgWidth, svgHeight);
-            // ctx.translate(x, y);
-            // ctx.scale(1, 1);
-            // ctx.strokeStyle = 'red';
-            // ctx.lineWidth = 1;
-            // ctx.strokeRect(110, 110, rectSize, rectSize);
-            // ctx.restore();
-
             ctx.save();
             ctx.translate(x, y);
             ctx.scale(1, 1);

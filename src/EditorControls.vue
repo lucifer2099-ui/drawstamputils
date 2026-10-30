@@ -496,7 +496,6 @@ const handleLineConfigUpdate = (updater: (config: IDrawStampConfig) => void) => 
     try {
       const fonts = await getSystemFonts()
       systemFonts.value = fonts
-      console.log('EditorControls: 加载系统字体成功，共', fonts.length, '个字体')
     } catch (error) {
       console.error('EditorControls: 加载系统字体失败', error)
       // 即使失败也设置一个默认字体列表

@@ -95,7 +95,6 @@ export class DrawSvgUtils {
             ctx.lineWidth = 1;
             ctx.strokeRect(10, 10, rectSize, rectSize);
             ctx.restore();
-            console.log("draw svg base64Url")
         } catch (error) {
             console.error('Error drawing SVG:', error);
         }
@@ -126,7 +125,6 @@ export class DrawSvgUtils {
             // }
             // const svgContent = await response.text();
             // await this.drawSVGContent(ctx, svgContent, x, y, scale);
-            console.log("draw test svg content", svgPath, x, y, scale)
             ctx.save();
             ctx.translate(x, y);
             ctx.scale(1, 1);

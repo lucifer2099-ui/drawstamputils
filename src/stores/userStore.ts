@@ -18,36 +18,40 @@ const userState = reactive<UserState>({
 })
 
 export function useUserStore() {
-  // 从 localStorage 恢复登录状态
+  // 从安全的 HTTP Cookie 机制恢复登录状态 (需后端配合)
   const initAuth = () => {
-    const savedToken = localStorage.getItem('auth_token')
-    const savedUser = localStorage.getItem('auth_user')
-    
-    if (savedToken && savedUser) {
-      userState.token = savedToken
-      try {
-        userState.user = JSON.parse(savedUser)
-      } catch (e) {
-        console.error('Failed to parse saved user', e)
+    // 移除不安全的 localStorage 读取
+    // 实际项目中应通过调用后端 API (如 /api/auth/me) 并依赖 HttpOnly Cookie 来恢复会话
+    // 由于修改为 async 会破坏同步调用方，保持同步形式并采用 fire-and-forget 的方式调用
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.user) {
+          userState.user = data.user
+          if (data.token) userState.token = data.token
+        }
+      })
+      .catch(e => {
+        console.error('Failed to init auth', e)
         clearAuth()
-      }
-    }
+      })
   }
 
   // 设置认证信息
   const setAuth = (token: string, user: User) => {
     userState.token = token
     userState.user = user
-    localStorage.setItem('auth_token', token)
-    localStorage.setItem('auth_user', JSON.stringify(user))
+    // 移除不安全的 localStorage 存储
+    // 认证状态现应由后端的 HttpOnly Cookie 维护
   }
 
   // 清除认证信息
   const clearAuth = () => {
     userState.token = null
     userState.user = null
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_user')
+    // 移除不安全的 localStorage 删除
+    // 实际项目中应调用后端登出 API 清除 HttpOnly Cookie
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
   }
 
   // 设置加载状态
@@ -72,4 +76,3 @@ export function useUserStore() {
     setLoading,
   }
 }
-

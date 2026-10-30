@@ -507,9 +507,7 @@ const handleLineConfigUpdate = (updater: (config: IDrawStampConfig) => void) => 
 
   // 在组件挂载时加载字体
   onMounted(async () => {
-    console.log('EditorControls: onMounted drawStampUtils', props.drawStampUtils)
     await loadSystemFonts()
-    console.log('EditorControls: 系统字体列表已加载，共', systemFonts.value.length, '个字体')
     restoreDrawConfigs()
     drawStamp()
     loadPresetsFromLocalStorage()

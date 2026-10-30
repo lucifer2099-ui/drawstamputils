@@ -125,7 +125,6 @@ export class DrawStampUtils {
      * @param intensity
      */
     addManualAgingEffect(x: number, y: number, intensityFactor: number) {
-        console.log('手动做旧   1', x, y, this.drawStampConfigs.agingEffect.agingEffectParams)
         const radius = 1 * this.mmToPixel; // 直径3mm，半径1.5mm
 
         // 考虑印章偏移量

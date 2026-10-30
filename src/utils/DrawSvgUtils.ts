@@ -21,13 +21,6 @@ export class DrawSvgUtils {
         try {
             // 先绘制一个固定大小的矩形（10mm x 10mm）
             const rectSize = 10 * this.mmToPixel;
-            // ctx.save();
-            // ctx.translate(x, y);
-            // ctx.scale(1, 1);
-            // ctx.strokeStyle = 'blue';
-            // ctx.lineWidth = 1;
-            // ctx.strokeRect(10, 10, rectSize, rectSize);
-            // ctx.restore();
 
             // 使用 DOMParser 安全地解析 SVG 内容，避免 XSS 风险
             const parser = new DOMParser();
@@ -73,21 +66,6 @@ export class DrawSvgUtils {
                 tempImg.onerror = reject;
             });
 
-            // 等待图片加载完成
-            // await new Promise((resolve, reject) => {
-            //     tempImg.onload = resolve;
-            //     tempImg.onerror = reject;
-            // });
-            // const bitmap = await createImageBitmap(tempImg);
-            // ctx.save();
-            // ctx.drawImage(bitmap, -svgWidth / 2, -svgHeight / 2, svgWidth, svgHeight);
-            // ctx.translate(x, y);
-            // ctx.scale(1, 1);
-            // ctx.strokeStyle = 'red';
-            // ctx.lineWidth = 1;
-            // ctx.strokeRect(110, 110, rectSize, rectSize);
-            // ctx.restore();
-
             ctx.save();
             ctx.translate(x, y);
             ctx.scale(1, 1);
@@ -113,19 +91,6 @@ export class DrawSvgUtils {
     ) {
         try {
             const rectSize = 10 * this.mmToPixel;
-            // ctx.save();
-            // ctx.translate(x, y);
-            // ctx.scale(1, 1);
-            // ctx.strokeStyle = 'blue';
-            // ctx.lineWidth = 1;
-            // ctx.strokeRect(10, 10, rectSize, rectSize);
-            // ctx.restore();
-            // const response = await fetch(svgPath);
-            // if (!response.ok) {
-            //     throw new Error(`Failed to load SVG: ${response.statusText}`);
-            // }
-            // const svgContent = await response.text();
-            // await this.drawSVGContent(ctx, svgContent, x, y, scale);
             console.log("draw test svg content", svgPath, x, y, scale)
             ctx.save();
             ctx.translate(x, y);

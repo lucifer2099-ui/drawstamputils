@@ -29,6 +29,15 @@ describe('svgAssets', () => {
         content: '<svg></svg>'
       })
     })
+
+    it('should handle non-string content', () => {
+      const asset = parseSvgAsset('test.svg', null)
+      expect(asset).toEqual({
+        key: 'test.svg',
+        name: 'test',
+        content: null
+      })
+    })
   })
 
   describe('getSvgAssets', () => {

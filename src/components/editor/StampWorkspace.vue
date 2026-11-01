@@ -410,10 +410,6 @@ let isUpdatingFromParent = false
 
 // 获取所有文字路径（公司名称、编码和印章类型）
 let allTextPaths: any[] = []
-let companyTextPaths: any[] = []
-let codeTextPaths: any[] = []
-let stampTypeTextPaths: any[] = []
-let taxNumberTextPaths: any[] = []
 
 // 初始化绘制印章参数
 const initDrawStampUtils = () => {
@@ -445,11 +441,12 @@ const drawStamp = (refreshSecurityPattern: boolean = false, refreshOld: boolean 
   syncConfigToParent()
 
   // 更新文字路径
-  companyTextPaths = drawStampUtils.drawCompanyUtils.getTextPaths()
-  codeTextPaths = drawStampUtils.drawCodeUtils.getTextPaths()
-  stampTypeTextPaths = drawStampUtils.drawStampTypeUtils.getTextPaths()
-  taxNumberTextPaths = drawStampUtils.drawTaxNumberUtils.getTextPaths()
-  allTextPaths = [...companyTextPaths, ...codeTextPaths, ...stampTypeTextPaths, ...taxNumberTextPaths]
+  allTextPaths = [
+    ...drawStampUtils.drawCompanyUtils.getTextPaths(),
+    ...drawStampUtils.drawCodeUtils.getTextPaths(),
+    ...drawStampUtils.drawStampTypeUtils.getTextPaths(),
+    ...drawStampUtils.drawTaxNumberUtils.getTextPaths()
+  ]
 }
 
 // 触发文件选择

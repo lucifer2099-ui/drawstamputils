@@ -1,4 +1,4 @@
-// 字体名称映射：英文字体名称 -> 中文显示名称
+﻿// 字体名称映射：英文字体名称 -> 中文显示名称
 export function getFontDisplayName(fontName: string): string {
   const fontNameMap: Record<string, string> = {
     // GB2312 国标字体
@@ -28,9 +28,6 @@ export function getFontDisplayName(fontName: string): string {
     'STXingkai': '华文行楷 (书法)',
     'STXinwei': '华文新魏 (书法)',
     'STCaiyun': '华文彩云',
-    'STLiti': '华文隶书 (书法)',
-    'LiSu': '隶书 (书法)',
-    'SimLi': '隶书 (GB2312) (书法)',
     // 篆书字体（如果系统已安装）
     'FZZhuan': '方正篆书',
     'HYZhuan': '汉仪篆书',

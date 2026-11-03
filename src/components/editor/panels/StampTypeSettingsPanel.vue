@@ -196,14 +196,24 @@
 
             <!-- 局部做旧效果设置 -->
             <div class="range-item-divider" style="margin: 8px 0; border-top: 1px dashed #e5e7eb; width: 100%;"></div>
-            <label class="inline-label">
-              <span class="label-text">开启做旧效果:</span>
-              <input
-                type="checkbox"
-                :checked="type.drawAging ?? false"
-                @change="updateStampType(index, 'drawAging', ($event.target as HTMLInputElement).checked)"
-              />
-            </label>
+            <div style="display: flex; gap: 16px; width: 100%;">
+              <label class="inline-label" style="flex: 1;">
+                <span class="label-text">开启做旧效果:</span>
+                <input
+                  type="checkbox"
+                  :checked="type.drawAging ?? false"
+                  @change="updateStampType(index, 'drawAging', ($event.target as HTMLInputElement).checked)"
+                />
+              </label>
+              <label class="inline-label" style="flex: 1;">
+                <span class="label-text">开启油墨毛边:</span>
+                <input
+                  type="checkbox"
+                  :checked="type.drawRoughEdge ?? false"
+                  @change="updateStampType(index, 'drawRoughEdge', ($event.target as HTMLInputElement).checked)"
+                />
+              </label>
+            </div>
             <div v-if="type.drawAging" class="range-item">
               <div class="range-header">
                 <span class="range-label-text">做旧强度</span>

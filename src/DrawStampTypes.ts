@@ -53,6 +53,8 @@ export type ICompany = {
     drawAging?: boolean // 是否绘制做旧效果
     agingIntensity?: number // 做旧强度
     agingNoiseSize?: number // 做旧噪声大小 (mm)
+    drawRoughEdge?: boolean // 是否绘制毛边效果
+    roughEdgeScale?: number // 毛边缩放因子
 }
 
 // 印章编码
@@ -66,6 +68,11 @@ export type ICode = {
     textDistributionFactor: number // 文字分布因子
     fontWeight: string | number // 编码字体粗细
     color?: string // 颜色
+    drawAging?: boolean // 是否绘制做旧效果
+    agingIntensity?: number // 做旧强度
+    agingNoiseSize?: number // 做旧噪声大小 (mm)
+    drawRoughEdge?: boolean // 是否绘制毛边效果
+    roughEdgeScale?: number // 毛边缩放因子
 }
 
 export type ITaxNumber = {
@@ -79,6 +86,11 @@ export type ITaxNumber = {
     totalWidth: number // 编码文字总宽度
     fontWeight: string | number // 税号字体粗细
     color?: string // 颜色
+    drawAging?: boolean // 是否绘制做旧效果
+    agingIntensity?: number // 做旧强度
+    agingNoiseSize?: number // 做旧噪声大小 (mm)
+    drawRoughEdge?: boolean // 是否绘制毛边效果
+    roughEdgeScale?: number // 毛边缩放因子
 }
 
 // 做旧效果参数
@@ -183,6 +195,8 @@ export type IStampType = {
     drawAging?: boolean // 是否绘制做旧效果
     agingIntensity?: number // 做旧强度
     agingNoiseSize?: number // 做旧噪声大小 (mm)
+    drawRoughEdge?: boolean // 是否绘制毛边效果
+    roughEdgeScale?: number // 毛边缩放因子
 }
 
 // 内圈圆

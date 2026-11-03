@@ -2,7 +2,7 @@ import { ICompany } from "../DrawStampTypes"
 
 export class DrawCompanyUtils {
     private mmToPixel = 10
-    // 添加存储文字路径的数组
+    // 娣诲姞瀛樺偍鏂囧瓧璺緞鐨勬暟缁?
     private textPaths: Array<{
         text: string,
 
@@ -20,17 +20,17 @@ export class DrawCompanyUtils {
         this.textPaths = []
     }
 
-    // 添加获取文字路径的方法
+    // 娣诲姞鑾峰彇鏂囧瓧璺緞鐨勬柟娉?
     getTextPaths() {
         return this.textPaths
     }
 
-    // 清除文字路径
+    // 娓呴櫎鏂囧瓧璺緞
     clearTextPaths() {
         this.textPaths = []
     }
 
-    // 添加绘制公司列表的方法
+    // 娣诲姞缁樺埗鍏徃鍒楄〃鐨勬柟娉?
     drawCompanyList(
         ctx: CanvasRenderingContext2D,
         companyList: ICompany[],
@@ -46,13 +46,13 @@ export class DrawCompanyUtils {
         }
 
             /**
-     * 绘制公司名称
-     * @param centerX 圆心x坐标
-     * @param centerY 圆心y坐标
-     * @param radiusX 椭圆长轴半径
-     * @param radiusY 椭圆短轴半径
-     * @param text 公司名称文本
-     * @param fontSize 字体大小
+     * 缁樺埗鍏徃鍚嶇О
+     * @param centerX 鍦嗗績x鍧愭爣
+     * @param centerY 鍦嗗績y鍧愭爣
+     * @param radiusX 妞渾闀胯酱鍗婂緞
+     * @param radiusY 妞渾鐭酱鍗婂緞
+     * @param text 鍏徃鍚嶇О鏂囨湰
+     * @param fontSize 瀛椾綋澶у皬
      */
     drawCompanyName(
         ctx: CanvasRenderingContext2D,
@@ -65,7 +65,7 @@ export class DrawCompanyUtils {
       ) {
         this.clearTextPaths()
         
-        // 根据印章形状选择绘制方式
+        // 鏍规嵁鍗扮珷褰㈢姸閫夋嫨缁樺埗鏂瑰紡
         if (company.shape === 'rectangle' || company.shape === 'rhombus' || company.shape === 'organic' || company.shape === 'triangle') {
             this.drawRectangleText(ctx, company, centerX, centerY, radiusX, radiusY, color)
         } else {
@@ -74,7 +74,7 @@ export class DrawCompanyUtils {
     }
 
     /**
-     * 绘制椭圆文字（原有逻辑）
+     * 缁樺埗妞渾鏂囧瓧锛堝師鏈夐€昏緫锛?
      */
     private drawEllipseText(
         ctx: CanvasRenderingContext2D,
@@ -107,11 +107,11 @@ export class DrawCompanyUtils {
         const characterCount = characters.length
         const borderOffset = company.borderOffset * this.mmToPixel
       
-        // 计算总角度和每个字符的角度
+        // 璁＄畻鎬昏搴﹀拰姣忎釜瀛楃鐨勮搴?
         const totalAngle = Math.PI * (0.5 + characterCount / (company.textDistributionFactor * 4))
         const anglePerChar = totalAngle / characterCount
       
-        // 根据旋转方向设置起始角度和角度增量
+        // 鏍规嵁鏃嬭浆鏂瑰悜璁剧疆璧峰瑙掑害鍜岃搴﹀閲?
         const direction = company.rotateDirection === 'clockwise' ? -1 : 1
         const startAngle = (company.startAngle ? company.startAngle : 0) + (company.rotateDirection === 'clockwise' ? 
           Math.PI - totalAngle / 2 : 
@@ -119,7 +119,7 @@ export class DrawCompanyUtils {
       
         const angleOffset = company.rotateDirection === 'clockwise' ? -Math.PI/2 : Math.PI/2
 
-        // 计算字符位置时考虑椭圆文字调整
+        // 璁＄畻瀛楃浣嶇疆鏃惰€冭檻妞渾鏂囧瓧璋冩暣
         if (company.adjustEllipseText) {
           let halfCharCount = 0
           if(characterCount % 2 !== 0){
@@ -129,7 +129,7 @@ export class DrawCompanyUtils {
           }
       
           characters.forEach((char, index) => {
-            // 计算当前字符的角度，包含椭圆调整
+            // 璁＄畻褰撳墠瀛楃鐨勮搴︼紝鍖呭惈妞渾璋冩暣
             const halfIndex = halfCharCount - index - 1
             const adjustmentFactor = Math.pow(halfIndex / halfCharCount, 2)
             const additionalAngle = adjustmentFactor * anglePerChar * company.adjustEllipseTextFactor
@@ -139,17 +139,17 @@ export class DrawCompanyUtils {
             let angle = startAngle + direction * anglePerChar * (index + 0.5)
             angle += additionalAngle * factor
       
-            // 计算字符位置
+            // 璁＄畻瀛楃浣嶇疆
             const x = centerX + Math.cos(angle) * (radiusX - fontSize - borderOffset)
             const y = centerY + Math.sin(angle) * (radiusY - fontSize - borderOffset)
       
             ctx.save()
             ctx.translate(x, y)
-            // 根据旋转方向调整文字旋转角度
+            // 鏍规嵁鏃嬭浆鏂瑰悜璋冩暣鏂囧瓧鏃嬭浆瑙掑害
             ctx.rotate(angle + angleOffset)
             ctx.scale(company.compression, 1)
 
-            // 创建文字路径
+            // 鍒涘缓鏂囧瓧璺緞
             this.textPaths.push({
                 text: char,
                 type: 'company',
@@ -161,15 +161,11 @@ export class DrawCompanyUtils {
                 }
             })
 
-            ctx.fillText(char, 0, 0)
-            if (typeof company !== "undefined" && company.drawAging) {
-                const charWidth = getCharWidth(char);
-                this.applyTextAgingAt(ctx, fontSize, 'bottom', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-            }
+            this.drawChar(ctx, char, company, fontSize, 'bottom', 0, 0)
             ctx.restore()
           })
         } else {
-          // 不调整椭圆文字时的正常绘制
+          // 涓嶈皟鏁存き鍦嗘枃瀛楁椂鐨勬甯哥粯鍒?
           characters.forEach((char, index) => {
             const angle = startAngle + direction * anglePerChar * (index + 0.5)
             
@@ -181,7 +177,7 @@ export class DrawCompanyUtils {
             ctx.rotate(angle + angleOffset)
             ctx.scale(company.compression, 1)
 
-            // 创建文字路径
+            // 鍒涘缓鏂囧瓧璺緞
             this.textPaths.push({
                 text: char,
                 type: 'company',
@@ -193,11 +189,7 @@ export class DrawCompanyUtils {
                 }
             })
 
-            ctx.fillText(char, 0, 0)
-            if (typeof company !== "undefined" && company.drawAging) {
-                const charWidth = getCharWidth(char);
-                this.applyTextAgingAt(ctx, fontSize, 'bottom', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-            }
+            this.drawChar(ctx, char, company, fontSize, 'bottom', 0, 0)
             ctx.restore()
           })
         }
@@ -206,7 +198,7 @@ export class DrawCompanyUtils {
     }
 
     /**
-     * 绘制矩形文字（横向或纵向）
+     * 缁樺埗鐭╁舰鏂囧瓧锛堟í鍚戞垨绾靛悜锛?
      */
     private drawRectangleText(
         ctx: CanvasRenderingContext2D,
@@ -227,7 +219,7 @@ export class DrawCompanyUtils {
         const verticalAlignment = company.rectangleVerticalAlignment || 'center'
         const lineSpacing = (company.rectangleLineSpacing || 0) * this.mmToPixel
         
-        // 应用位置偏移量（毫米转像素）
+        // 搴旂敤浣嶇疆鍋忕Щ閲忥紙姣背杞儚绱狅級
         const positionOffsetX = (company.rectanglePositionX || 0) * this.mmToPixel
         const positionOffsetY = (company.rectanglePositionY || 0) * this.mmToPixel
         const adjustedCenterX = centerX + positionOffsetX
@@ -237,12 +229,12 @@ export class DrawCompanyUtils {
         ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${company.fontFamily}`
         ctx.fillStyle = color
 
-        // 矩形尺寸（像素）
+        // 鐭╁舰灏哄锛堝儚绱狅級
         const rectWidth = width * this.mmToPixel
         const rectHeight = height * this.mmToPixel
 
         if (textDirection === 'horizontal') {
-            // 横向绘制
+            // 妯悜缁樺埗
             this.drawHorizontalTextWithWrap(
                 ctx,
                 company.companyName,
@@ -257,7 +249,7 @@ export class DrawCompanyUtils {
                 company.compression
             )
         } else {
-            // 纵向绘制
+            // 绾靛悜缁樺埗
             this.drawVerticalTextWithWrap(
                 ctx,
                 company.companyName,
@@ -278,7 +270,7 @@ export class DrawCompanyUtils {
     }
 
     /**
-     * 绘制横向文字（带自动换行）
+     * 缁樺埗妯悜鏂囧瓧锛堝甫鑷姩鎹㈣锛?
      */
     private drawHorizontalTextWithWrap(
         ctx: CanvasRenderingContext2D,
@@ -296,11 +288,11 @@ export class DrawCompanyUtils {
         ctx.textBaseline = 'middle'
         ctx.textAlign = 'center'
 
-        // 计算可用宽度（减去左右边距）
+        // 璁＄畻鍙敤瀹藉害锛堝噺鍘诲乏鍙宠竟璺濓級
         const availableWidth = rectWidth - 2 * textMargin
         const characters = text.split('')
 
-        // 将文字按行分割（自动换行）
+        // 灏嗘枃瀛楁寜琛屽垎鍓诧紙鑷姩鎹㈣锛?
         const lines: string[] = []
         let currentLine = ''
         let currentLineWidth = 0
@@ -310,25 +302,25 @@ export class DrawCompanyUtils {
             const charWidth = metrics.width * compression
 
             if (currentLineWidth + charWidth > availableWidth && currentLine.length > 0) {
-                // 当前行已满，开始新行
+                // 褰撳墠琛屽凡婊★紝寮€濮嬫柊琛?
                 lines.push(currentLine)
                 currentLine = char
                 currentLineWidth = charWidth
             } else {
-                // 添加到当前行
+                // 娣诲姞鍒板綋鍓嶈
                 currentLine += char
                 currentLineWidth += charWidth
             }
         }
-        // 添加最后一行
+        // 娣诲姞鏈€鍚庝竴琛?
         if (currentLine.length > 0) {
             lines.push(currentLine)
         }
 
-        // 计算总高度
-        const totalHeight = lines.length * fontSize + (lines.length - 1) * fontSize * 0.2 // 行间距为字体大小的20%
+        // 璁＄畻鎬婚珮搴?
+        const totalHeight = lines.length * fontSize + (lines.length - 1) * fontSize * 0.2 // 琛岄棿璺濅负瀛椾綋澶у皬鐨?0%
 
-        // 根据位置计算起始Y坐标
+        // 鏍规嵁浣嶇疆璁＄畻璧峰Y鍧愭爣
         let startY = centerY
         if (position === 'top') {
             startY = centerY - rectHeight / 2 + textMargin + fontSize / 2
@@ -340,7 +332,7 @@ export class DrawCompanyUtils {
             startY = centerY
         }
 
-        // 如果是左右位置，需要旋转90度
+        // 濡傛灉鏄乏鍙充綅缃紝闇€瑕佹棆杞?0搴?
         if (position === 'left' || position === 'right') {
             const x = position === 'left' 
                 ? centerX - rectWidth / 2 + textMargin + fontSize / 2
@@ -350,7 +342,7 @@ export class DrawCompanyUtils {
                 const lineY = startY + lineIndex * (fontSize * 1.2)
                 const lineChars = line.split('')
                 
-                // 计算行的总宽度
+                // 璁＄畻琛岀殑鎬诲搴?
                 const lineCharWidths = new Array(lineChars.length)
                 let lineTotalWidth = 0
                 for (let i = 0; i < lineChars.length; i++) {
@@ -360,7 +352,7 @@ export class DrawCompanyUtils {
                     lineTotalWidth += w
                 }
 
-                // 根据对齐方式计算起始X坐标
+                // 鏍规嵁瀵归綈鏂瑰紡璁＄畻璧峰X鍧愭爣
                 let lineStartX = centerX
                 if (alignment === 'left') {
                     lineStartX = centerX - rectWidth / 2 + textMargin
@@ -393,21 +385,17 @@ export class DrawCompanyUtils {
                         }
                     })
 
-                    ctx.fillText(char, 0, 0)
-                    if (typeof company !== "undefined" && company.drawAging) {
-                        const charWidth = metrics.width;
-                        this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                    }
+                    this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                     ctx.restore()
                 })
             })
         } else {
-            // 顶部、底部或中心位置，正常横向绘制
+            // 椤堕儴銆佸簳閮ㄦ垨涓績浣嶇疆锛屾甯告í鍚戠粯鍒?
             lines.forEach((line, lineIndex) => {
                 const lineY = startY + lineIndex * (fontSize * 1.2)
                 const lineChars = line.split('')
                 
-                // 计算行的总宽度
+                // 璁＄畻琛岀殑鎬诲搴?
                 const lineCharWidths = new Array(lineChars.length)
                 let lineTotalWidth = 0
                 for (let i = 0; i < lineChars.length; i++) {
@@ -417,7 +405,7 @@ export class DrawCompanyUtils {
                     lineTotalWidth += w
                 }
 
-                // 根据对齐方式计算起始X坐标
+                // 鏍规嵁瀵归綈鏂瑰紡璁＄畻璧峰X鍧愭爣
                 let lineStartX = centerX
                 if (alignment === 'left') {
                     lineStartX = centerX - rectWidth / 2 + textMargin
@@ -449,11 +437,7 @@ export class DrawCompanyUtils {
                         }
                     })
 
-                    ctx.fillText(char, 0, 0)
-                    if (typeof company !== "undefined" && company.drawAging) {
-                        const charWidth = metrics.width;
-                        this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                    }
+                    this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                     ctx.restore()
                 })
             })
@@ -461,7 +445,7 @@ export class DrawCompanyUtils {
     }
 
     /**
-     * 绘制横向文字（旧方法，保留用于兼容）
+     * 缁樺埗妯悜鏂囧瓧锛堟棫鏂规硶锛屼繚鐣欑敤浜庡吋瀹癸級
      */
     private drawHorizontalText(
         ctx: CanvasRenderingContext2D,
@@ -479,7 +463,7 @@ export class DrawCompanyUtils {
         const characters = text.split('')
         ctx.textBaseline = 'middle'
 
-        // 计算文字总宽度
+        // 璁＄畻鏂囧瓧鎬诲搴?
         const charWidths = new Array(characters.length)
         let totalWidth = 0
         for (let i = 0; i < characters.length; i++) {
@@ -489,7 +473,7 @@ export class DrawCompanyUtils {
             totalWidth += w
         }
 
-        // 根据位置计算Y坐标
+        // 鏍规嵁浣嶇疆璁＄畻Y鍧愭爣
         let y = centerY
         if (position === 'top') {
             y = centerY - rectHeight / 2 + borderOffset + fontSize / 2
@@ -499,7 +483,7 @@ export class DrawCompanyUtils {
             y = centerY
         }
 
-        // 根据对齐方式计算起始X坐标
+        // 鏍规嵁瀵归綈鏂瑰紡璁＄畻璧峰X鍧愭爣
         let startX = centerX
         if (alignment === 'left') {
             startX = centerX - rectWidth / 2 + borderOffset
@@ -509,7 +493,7 @@ export class DrawCompanyUtils {
             startX = centerX - totalWidth / 2
         }
 
-        // 如果是左右位置，需要旋转90度
+        // 濡傛灉鏄乏鍙充綅缃紝闇€瑕佹棆杞?0搴?
         if (position === 'left' || position === 'right') {
             const x = position === 'left' 
                 ? centerX - rectWidth / 2 + borderOffset + fontSize / 2
@@ -526,7 +510,7 @@ export class DrawCompanyUtils {
                 ctx.rotate(position === 'left' ? -Math.PI / 2 : Math.PI / 2)
                 ctx.scale(compression, 1)
 
-                // 创建文字路径
+                // 鍒涘缓鏂囧瓧璺緞
                 const metrics = ctx.measureText(char)
                 this.textPaths.push({
                     text: char,
@@ -539,15 +523,11 @@ export class DrawCompanyUtils {
                     }
                 })
 
-                ctx.fillText(char, 0, 0)
-                if (typeof company !== "undefined" && company.drawAging) {
-                    const charWidth = metrics.width;
-                    this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                }
+                this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                 ctx.restore()
             })
         } else {
-            // 顶部、底部或中心位置，正常横向绘制
+            // 椤堕儴銆佸簳閮ㄦ垨涓績浣嶇疆锛屾甯告í鍚戠粯鍒?
             let currentWidth = 0
             characters.forEach((char, index) => {
                 const charWidth = charWidths[index]
@@ -559,7 +539,7 @@ export class DrawCompanyUtils {
                 ctx.scale(compression, 1)
                 ctx.textAlign = 'center'
 
-                // 创建文字路径
+                // 鍒涘缓鏂囧瓧璺緞
                 const metrics = ctx.measureText(char)
                 this.textPaths.push({
                     text: char,
@@ -572,18 +552,14 @@ export class DrawCompanyUtils {
                     }
                 })
 
-                ctx.fillText(char, 0, 0)
-                if (typeof company !== "undefined" && company.drawAging) {
-                    const charWidth = metrics.width;
-                    this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                }
+                this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                 ctx.restore()
             })
         }
     }
 
     /**
-     * 绘制纵向文字（带自动换行）
+     * 缁樺埗绾靛悜鏂囧瓧锛堝甫鑷姩鎹㈣锛?
      */
     private drawVerticalTextWithWrap(
         ctx: CanvasRenderingContext2D,
@@ -602,11 +578,11 @@ export class DrawCompanyUtils {
         ctx.textBaseline = 'middle'
         ctx.textAlign = 'center'
 
-        // 计算可用高度（减去上下边距）
+        // 璁＄畻鍙敤楂樺害锛堝噺鍘讳笂涓嬭竟璺濓級
         const availableHeight = rectHeight - 2 * textMargin
         const characters = text.split('')
 
-        // 将文字按列分割（自动换行）
+        // 灏嗘枃瀛楁寜鍒楀垎鍓诧紙鑷姩鎹㈣锛?
         const columns: string[] = []
         let currentColumn = ''
         let currentColumnHeight = 0
@@ -616,26 +592,26 @@ export class DrawCompanyUtils {
             const charHeight = fontSize + actualLineSpacing
 
             if (currentColumnHeight + charHeight > availableHeight && currentColumn.length > 0) {
-                // 当前列已满，开始新列
+                // 褰撳墠鍒楀凡婊★紝寮€濮嬫柊鍒?
                 columns.push(currentColumn)
                 currentColumn = char
                 currentColumnHeight = fontSize
             } else {
-                // 添加到当前列
+                // 娣诲姞鍒板綋鍓嶅垪
                 currentColumn += char
                 currentColumnHeight += charHeight
             }
         }
-        // 添加最后一列
+        // 娣诲姞鏈€鍚庝竴鍒?
         if (currentColumn.length > 0) {
             columns.push(currentColumn)
         }
 
-        // 计算总宽度
-        const columnWidth = fontSize + fontSize * 0.2 // 列间距为字体大小的20%
+        // 璁＄畻鎬诲搴?
+        const columnWidth = fontSize + fontSize * 0.2 // 鍒楅棿璺濅负瀛椾綋澶у皬鐨?0%
         const totalWidth = columns.length * columnWidth
 
-        // 根据位置计算起始X坐标
+        // 鏍规嵁浣嶇疆璁＄畻璧峰X鍧愭爣
         let startX = centerX
         if (position === 'left') {
             startX = centerX - rectWidth / 2 + textMargin + fontSize / 2
@@ -647,7 +623,7 @@ export class DrawCompanyUtils {
             startX = centerX
         }
 
-        // 如果是上下位置，需要旋转90度
+        // 濡傛灉鏄笂涓嬩綅缃紝闇€瑕佹棆杞?0搴?
         if (position === 'top' || position === 'bottom') {
             const y = position === 'top'
                 ? centerY - rectHeight / 2 + textMargin + fontSize / 2
@@ -657,10 +633,10 @@ export class DrawCompanyUtils {
                 const columnX = startX + columnIndex * columnWidth
                 const columnChars = column.split('')
                 
-                // 计算列的总高度
+                // 璁＄畻鍒楃殑鎬婚珮搴?
                 const columnTotalHeight = columnChars.length * fontSize + (columnChars.length - 1) * actualLineSpacing
 
-                // 根据对齐方式计算起始Y坐标
+                // 鏍规嵁瀵归綈鏂瑰紡璁＄畻璧峰Y鍧愭爣
                 let columnStartY = centerY
                 if (alignment === 'top') {
                     columnStartY = centerY - rectHeight / 2 + textMargin + fontSize / 2
@@ -690,24 +666,20 @@ export class DrawCompanyUtils {
                         }
                     })
 
-                    ctx.fillText(char, 0, 0)
-                    if (typeof company !== "undefined" && company.drawAging) {
-                        const charWidth = metrics.width;
-                        this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                    }
+                    this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                     ctx.restore()
                 })
             })
         } else {
-            // 左右位置，正常纵向绘制
+            // 宸﹀彸浣嶇疆锛屾甯哥旱鍚戠粯鍒?
             columns.forEach((column, columnIndex) => {
                 const columnX = startX + columnIndex * columnWidth
                 const columnChars = column.split('')
                 
-                // 计算列的总高度
+                // 璁＄畻鍒楃殑鎬婚珮搴?
                 const columnTotalHeight = columnChars.length * fontSize + (columnChars.length - 1) * actualLineSpacing
 
-                // 根据对齐方式计算起始Y坐标
+                // 鏍规嵁瀵归綈鏂瑰紡璁＄畻璧峰Y鍧愭爣
                 let columnStartY = centerY
                 if (alignment === 'top') {
                     columnStartY = centerY - rectHeight / 2 + textMargin + fontSize / 2
@@ -736,11 +708,7 @@ export class DrawCompanyUtils {
                         }
                     })
 
-                    ctx.fillText(char, 0, 0)
-                    if (typeof company !== "undefined" && company.drawAging) {
-                        const charWidth = metrics.width;
-                        this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                    }
+                    this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                     ctx.restore()
                 })
             })
@@ -748,7 +716,7 @@ export class DrawCompanyUtils {
     }
 
     /**
-     * 绘制纵向文字（旧方法，保留用于兼容）
+     * 缁樺埗绾靛悜鏂囧瓧锛堟棫鏂规硶锛屼繚鐣欑敤浜庡吋瀹癸級
      */
     private drawVerticalText(
         ctx: CanvasRenderingContext2D,
@@ -768,10 +736,10 @@ export class DrawCompanyUtils {
         ctx.textBaseline = 'middle'
         ctx.textAlign = 'center'
 
-        // 计算文字总高度
+        // 璁＄畻鏂囧瓧鎬婚珮搴?
         const totalHeight = characters.length * fontSize + (characters.length - 1) * lineSpacing
 
-        // 根据位置计算X坐标
+        // 鏍规嵁浣嶇疆璁＄畻X鍧愭爣
         let x = centerX
         if (position === 'left') {
             x = centerX - rectWidth / 2 + borderOffset + fontSize / 2
@@ -781,7 +749,7 @@ export class DrawCompanyUtils {
             x = centerX
         }
 
-        // 根据对齐方式计算起始Y坐标
+        // 鏍规嵁瀵归綈鏂瑰紡璁＄畻璧峰Y鍧愭爣
         let startY = centerY
         if (alignment === 'top') {
             startY = centerY - rectHeight / 2 + borderOffset + fontSize / 2
@@ -791,7 +759,7 @@ export class DrawCompanyUtils {
             startY = centerY - totalHeight / 2 + fontSize / 2
         }
 
-        // 如果是上下位置，需要旋转90度
+        // 濡傛灉鏄笂涓嬩綅缃紝闇€瑕佹棆杞?0搴?
         if (position === 'top' || position === 'bottom') {
             const y = position === 'top'
                 ? centerY - rectHeight / 2 + borderOffset + fontSize / 2
@@ -805,7 +773,7 @@ export class DrawCompanyUtils {
                 ctx.rotate(position === 'top' ? Math.PI / 2 : -Math.PI / 2)
                 ctx.scale(compression, 1)
 
-                // 创建文字路径
+                // 鍒涘缓鏂囧瓧璺緞
                 const metrics = ctx.measureText(char)
                 this.textPaths.push({
                     text: char,
@@ -818,15 +786,11 @@ export class DrawCompanyUtils {
                     }
                 })
 
-                ctx.fillText(char, 0, 0)
-                if (typeof company !== "undefined" && company.drawAging) {
-                    const charWidth = metrics.width;
-                    this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                }
+                this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                 ctx.restore()
             })
         } else {
-            // 左右位置，正常纵向绘制
+            // 宸﹀彸浣嶇疆锛屾甯哥旱鍚戠粯鍒?
             characters.forEach((char, index) => {
                 const charY = startY + index * (fontSize + lineSpacing)
 
@@ -834,7 +798,7 @@ export class DrawCompanyUtils {
                 ctx.translate(x, charY)
                 ctx.scale(compression, 1)
 
-                // 创建文字路径
+                // 鍒涘缓鏂囧瓧璺緞
                 const metrics = ctx.measureText(char)
                 this.textPaths.push({
                     text: char,
@@ -847,18 +811,36 @@ export class DrawCompanyUtils {
                     }
                 })
 
-                ctx.fillText(char, 0, 0)
-                if (typeof company !== "undefined" && company.drawAging) {
-                    const charWidth = metrics.width;
-                    this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, 0, 0);
-                }
+                this.drawChar(ctx, char, company, fontSize, 'middle', 0, 0)
                 ctx.restore()
             })
         }
     }
 
+    private drawChar(
+        ctx: CanvasRenderingContext2D,
+        char: string,
+        company: ICompany,
+        fontSize: number,
+        textBaseline: 'bottom' | 'middle',
+        offsetX: number = 0,
+        offsetY: number = 0
+    ) {
+        if (company.drawRoughEdge) {
+            ctx.filter = 'url(#stamp-ink-filter)';
+        }
+        ctx.fillText(char, offsetX, offsetY);
+        if (company.drawRoughEdge) {
+            ctx.filter = 'none';
+        }
+        if (company.drawAging) {
+            const charWidth = ctx.measureText(char).width;
+            this.applyTextAgingAt(ctx, fontSize, textBaseline, charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, offsetX, offsetY, char);
+        }
+    }
+
     /**
-     * 对字符进行局部的噪点磨损做旧擦除
+     * 瀵瑰瓧绗﹁繘琛屽眬閮ㄧ殑鍣偣纾ㄦ崯鍋氭棫鎿﹂櫎
      */
     private applyTextAgingAt(
         ctx: CanvasRenderingContext2D,
@@ -869,25 +851,45 @@ export class DrawCompanyUtils {
         agingIntensity?: number,
         agingNoiseSize?: number,
         offsetX: number = 0,
-        offsetY: number = 0
+        offsetY: number = 0,
+        char: string = ''
     ) {
         if (!drawAging) return;
         
+        // 1. 鍒╃敤瀛楃 ASCII/Unicode 浜х敓涓庤瀛楃嫭涓€鏃犱簩鐨勯殢鏈哄€硷紙Wear Factor Seed锛?
+        const intensity = agingIntensity ?? 50;
+        const charVal = char ? char.charCodeAt(0) : 0;
+        const charSeed = Math.abs(Math.sin(charVal + intensity + offsetX + offsetY));
+        
+        // 20% 鐨勬鐜囪瀛楃涓衡€滈珮娓呬笉纾ㄦ崯瀛椻€?
+        if (charSeed < 0.2) {
+            return;
+        }
+
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
         ctx.fillStyle = '#FFFFFF';
         ctx.strokeStyle = '#FFFFFF';
         
         const noiseSize = agingNoiseSize ?? 0.15;
-        const intensity = agingIntensity ?? 50;
         
-        // 噪声大小换算为像素
+        // 鍣０澶у皬鎹㈢畻涓哄儚绱?
         const noiseRadius = noiseSize * this.mmToPixel;
         
-        // 每个字的做旧点数量，由于单字面积小，点数换算系数设为 0.05
-        const pointsCount = Math.round(intensity * 0.05);
+        // 姣忎釜瀛楃殑鍋氭棫鐐规暟閲?
+        let pointsCount = Math.round(intensity * 0.05);
+
+        // 15% 鐨勬鐜囦负鈥滈噸搴︾（鎹熷共鏋瓧鈥?
+        if (charSeed > 0.85) {
+            pointsCount = Math.round(pointsCount * 1.8);
+            // 闄嶄綆閫忔槑搴︿互妯℃嫙缂哄ⅷ骞叉灟鎰?
+            ctx.globalAlpha = 0.65;
+        } else {
+            // 鏅€氱（鎹熷瓧
+            ctx.globalAlpha = 0.9;
+        }
         
-        // 确定以 (offsetX, offsetY) 为基准的包围盒
+        // 纭畾浠?(offsetX, offsetY) 涓哄熀鍑嗙殑鍖呭洿鐩?
         const minX = offsetX - charWidth / 2;
         const maxX = offsetX + charWidth / 2;
         let minY = offsetY - fontSize;
@@ -903,7 +905,7 @@ export class DrawCompanyUtils {
             
             const rand = Math.random();
             if (rand < 0.6) {
-                // 1. 随机扁椭圆
+                // 1. 闅忔満鎵佹き鍦?
                 const rx = (Math.random() * 0.8 + 0.2) * noiseRadius;
                 const ry = rx * (Math.random() * 0.4 + 0.2);
                 const rotation = Math.random() * Math.PI * 2;
@@ -911,7 +913,7 @@ export class DrawCompanyUtils {
                 ctx.ellipse(px, py, rx, ry, rotation, 0, Math.PI * 2);
                 ctx.fill();
             } else if (rand < 0.85) {
-                // 2. 细长划痕
+                // 2. 缁嗛暱鍒掔棔
                 const length = (Math.random() * 1.5 + 0.5) * noiseRadius;
                 const angle = Math.random() * Math.PI * 2;
                 const dx = Math.cos(angle) * length;
@@ -925,7 +927,7 @@ export class DrawCompanyUtils {
                 ctx.lineTo(px + dx, py + dy);
                 ctx.stroke();
             } else {
-                // 3. 复合碎斑
+                // 3. 澶嶅悎纰庢枒
                 const rx = (Math.random() * 0.6 + 0.2) * noiseRadius;
                 ctx.beginPath();
                 ctx.arc(px, py, rx, 0, Math.PI * 2);

@@ -1,21 +1,21 @@
 @echo off
 chcp 65001 >nul
-title 批量生成印章工具
+title Batch Stamp Generator
 
 echo ==================================================
-echo         正在启动命令行批量生成印章...
+echo         Starting Batch Stamp Generation...
 echo ==================================================
 echo.
 
-:: 切换到项目根目录（当前脚本所在目录的父目录）
+rem Navigate to root directory
 cd /d "%~dp0\.."
 
-:: 执行批量生成命令
+rem Run the batch generation script
 call npm run batch
 
 echo.
 echo ==================================================
-echo   生成完毕！图片已保存在 custome/output 目录下。
+echo   Done! Images saved in custome/output directory.
 echo ==================================================
 echo.
 pause

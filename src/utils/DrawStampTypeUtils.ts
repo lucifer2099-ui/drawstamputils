@@ -95,13 +95,7 @@ export class DrawStampTypeUtils {
                         ctx.rotate(rotationRad)
                     }
                     ctx.scale(stampType.compression, 1)
-                    ctx.fillText(char, 0, relativeY)
-                    
-                    // 局部做旧
-                    if (stampType.drawAging) {
-                        const charWidth = ctx.measureText(char).width;
-                        this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, stampType.drawAging, stampType.agingIntensity, stampType.agingNoiseSize, 0, relativeY);
-                    }
+                    this.drawChar(ctx, char, stampType, fontSize, 'middle', 0, relativeY)
                     
                     ctx.restore()
 
@@ -144,13 +138,7 @@ export class DrawStampTypeUtils {
                 // 绘制每个字符并存储路径
                 chars.forEach((char, index) => {
                     const charX = currentX + charWidths[index] / 2
-                    ctx.fillText(char, charX, 0)
-
-                    // 局部做旧
-                    if (stampType.drawAging) {
-                        const charWidth = charWidths[index];
-                        this.applyTextAgingAt(ctx, fontSize, 'middle', charWidth, stampType.drawAging, stampType.agingIntensity, stampType.agingNoiseSize, charX, 0);
-                    }
+                    this.drawChar(ctx, char, stampType, fontSize, 'middle', charX, 0)
 
                     const charWidth = charWidths[index] * stampType.compression
 
@@ -175,6 +163,28 @@ export class DrawStampTypeUtils {
         ctx.restore()
     }
 
+    private drawChar(
+        ctx: CanvasRenderingContext2D,
+        char: string,
+        stampType: IStampType,
+        fontSize: number,
+        textBaseline: 'bottom' | 'middle',
+        offsetX: number = 0,
+        offsetY: number = 0
+    ) {
+        if (stampType.drawRoughEdge) {
+            ctx.filter = 'url(#stamp-ink-filter)';
+        }
+        ctx.fillText(char, offsetX, offsetY);
+        if (stampType.drawRoughEdge) {
+            ctx.filter = 'none';
+        }
+        if (stampType.drawAging) {
+            const charWidth = ctx.measureText(char).width;
+            this.applyTextAgingAt(ctx, fontSize, textBaseline, charWidth, stampType.drawAging, stampType.agingIntensity, stampType.agingNoiseSize, offsetX, offsetY, char);
+        }
+    }
+
     /**
      * 对字符进行局部的噪点磨损做旧擦除
      */
@@ -187,23 +197,43 @@ export class DrawStampTypeUtils {
         agingIntensity?: number,
         agingNoiseSize?: number,
         offsetX: number = 0,
-        offsetY: number = 0
+        offsetY: number = 0,
+        char: string = ''
     ) {
         if (!drawAging) return;
         
+        // 1. 利用字符 ASCII/Unicode 产生与该字独一无二的随机值（Wear Factor Seed）
+        const intensity = agingIntensity ?? 50;
+        const charVal = char ? char.charCodeAt(0) : 0;
+        const charSeed = Math.abs(Math.sin(charVal + intensity + offsetX + offsetY));
+        
+        // 20% 的概率该字符为“高清不磨损字”
+        if (charSeed < 0.2) {
+            return;
+        }
+
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
         ctx.fillStyle = '#FFFFFF';
         ctx.strokeStyle = '#FFFFFF';
         
         const noiseSize = agingNoiseSize ?? 0.15;
-        const intensity = agingIntensity ?? 50;
         
         // 噪声大小换算为像素
         const noiseRadius = noiseSize * this.mmToPixel;
         
-        // 每个字的做旧点数量，由于单字面积小，点数换算系数设为 0.05
-        const pointsCount = Math.round(intensity * 0.05);
+        // 每个字的做旧点数量
+        let pointsCount = Math.round(intensity * 0.05);
+
+        // 15% 的概率为“重度磨损干枯字”
+        if (charSeed > 0.85) {
+            pointsCount = Math.round(pointsCount * 1.8);
+            // 降低透明度以模拟缺墨干枯感
+            ctx.globalAlpha = 0.65;
+        } else {
+            // 普通磨损字
+            ctx.globalAlpha = 0.9;
+        }
         
         // 确定以 (offsetX, offsetY) 为基准的包围盒
         const minX = offsetX - charWidth / 2;

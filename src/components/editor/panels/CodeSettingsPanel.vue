@@ -140,6 +140,63 @@
                 <button type="button" class="range-btn" @click.stop="adjustDistribution(index, 0.5)">▶</button>
               </div>
             </div>
+            
+            <!-- 做旧与毛边效果设置 -->
+            <div class="range-item-divider" style="margin: 8px 0; border-top: 1px dashed #e5e7eb; width: 100%;"></div>
+            <div style="display: flex; gap: 16px; width: 100%;">
+              <label class="inline-label" style="flex: 1; flex-direction: row; align-items: center; justify-content: space-between;">
+                <span class="label-text">开启做旧效果:</span>
+                <input
+                  type="checkbox"
+                  :checked="code.drawAging ?? false"
+                  @change="updateCode(index, 'drawAging', ($event.target as HTMLInputElement).checked)"
+                />
+              </label>
+              <label class="inline-label" style="flex: 1; flex-direction: row; align-items: center; justify-content: space-between;">
+                <span class="label-text">开启油墨毛边:</span>
+                <input
+                  type="checkbox"
+                  :checked="code.drawRoughEdge ?? false"
+                  @change="updateCode(index, 'drawRoughEdge', ($event.target as HTMLInputElement).checked)"
+                />
+              </label>
+            </div>
+            <div v-if="code.drawAging" class="range-item">
+              <div class="range-header">
+                <span class="range-label-text">做旧强度</span>
+                <span class="range-value-display">[ {{ code.agingIntensity ?? 30 }} ]</span>
+              </div>
+              <div class="range-container">
+                <button type="button" class="range-btn" @click.stop="adjustCodeAgingIntensity(index, -1)">◀</button>
+                <input
+                  type="range"
+                  :value="code.agingIntensity ?? 30"
+                  min="0"
+                  max="1300"
+                  step="1"
+                  @input="updateCode(index, 'agingIntensity', parseNumber($event))"
+                />
+                <button type="button" class="range-btn" @click.stop="adjustCodeAgingIntensity(index, 1)">▶</button>
+              </div>
+            </div>
+            <div v-if="code.drawAging" class="range-item">
+              <div class="range-header">
+                <span class="range-label-text">做旧噪点大小 (mm)</span>
+                <span class="range-value-display">[ {{ (code.agingNoiseSize ?? 0.15).toFixed(2) }} ]</span>
+              </div>
+              <div class="range-container">
+                <button type="button" class="range-btn" @click.stop="adjustCodeAgingNoiseSize(index, -0.01)">◀</button>
+                <input
+                  type="range"
+                  :value="code.agingNoiseSize ?? 0.15"
+                  min="0.05"
+                  max="0.5"
+                  step="0.01"
+                  @input="updateCode(index, 'agingNoiseSize', parseNumber($event))"
+                />
+                <button type="button" class="range-btn" @click.stop="adjustCodeAgingNoiseSize(index, 0.01)">▶</button>
+              </div>
+            </div>
           </div>
         </div>
         </transition>
@@ -370,6 +427,38 @@ const adjustDistribution = (index: number, delta: number) => {
     if (!list[index]) return
     const newValue = Math.max(0, Math.min(100, list[index].textDistributionFactor + delta))
     list[index].textDistributionFactor = newValue
+    config.stampCode = list[0]
+  })
+}
+
+const adjustCodeAgingIntensity = (index: number, delta: number) => {
+  emit('update-config', (config) => {
+    if (!config.stampCodeList) {
+      config.stampCodeList = []
+      if (config.stampCode) {
+        config.stampCodeList.push({ ...config.stampCode })
+      }
+    }
+    const list = config.stampCodeList
+    if (!list[index]) return
+    const newValue = Math.max(0, Math.min(1300, (list[index].agingIntensity ?? 30) + delta))
+    list[index].agingIntensity = newValue
+    config.stampCode = list[0]
+  })
+}
+
+const adjustCodeAgingNoiseSize = (index: number, delta: number) => {
+  emit('update-config', (config) => {
+    if (!config.stampCodeList) {
+      config.stampCodeList = []
+      if (config.stampCode) {
+        config.stampCodeList.push({ ...config.stampCode })
+      }
+    }
+    const list = config.stampCodeList
+    if (!list[index]) return
+    const newValue = Math.max(0.05, Math.min(0.5, (list[index].agingNoiseSize ?? 0.15) + delta))
+    list[index].agingNoiseSize = newValue
     config.stampCode = list[0]
   })
 }

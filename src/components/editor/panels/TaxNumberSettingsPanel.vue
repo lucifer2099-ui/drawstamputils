@@ -123,6 +123,63 @@
             <button type="button" class="range-btn" @click.stop="adjustPositionY(0.1)">▶</button>
           </div>
         </div>
+        
+        <!-- 做旧与毛边效果设置 -->
+        <div class="range-item-divider" style="margin: 8px 0; border-top: 1px dashed #e5e7eb; width: 100%;"></div>
+        <div style="display: flex; gap: 16px; width: 100%;">
+          <label class="inline-label" style="flex: 1; flex-direction: row; align-items: center; justify-content: space-between;">
+            <span class="label-text">开启做旧效果:</span>
+            <input
+              type="checkbox"
+              :checked="config.taxNumber.drawAging ?? false"
+              @change="updateTaxNumber('drawAging', ($event.target as HTMLInputElement).checked)"
+            />
+          </label>
+          <label class="inline-label" style="flex: 1; flex-direction: row; align-items: center; justify-content: space-between;">
+            <span class="label-text">开启油墨毛边:</span>
+            <input
+              type="checkbox"
+              :checked="config.taxNumber.drawRoughEdge ?? false"
+              @change="updateTaxNumber('drawRoughEdge', ($event.target as HTMLInputElement).checked)"
+            />
+          </label>
+        </div>
+        <div v-if="config.taxNumber.drawAging" class="range-item">
+          <div class="range-header">
+            <span class="range-label-text">做旧强度</span>
+            <span class="range-value-display">[ {{ config.taxNumber.agingIntensity ?? 30 }} ]</span>
+          </div>
+          <div class="range-container">
+            <button type="button" class="range-btn" @click.stop="adjustTaxNumberAgingIntensity(-1)">◀</button>
+            <input
+              type="range"
+              :value="config.taxNumber.agingIntensity ?? 30"
+              min="0"
+              max="1300"
+              step="1"
+              @input="updateTaxNumber('agingIntensity', parseNumber($event))"
+            />
+            <button type="button" class="range-btn" @click.stop="adjustTaxNumberAgingIntensity(1)">▶</button>
+          </div>
+        </div>
+        <div v-if="config.taxNumber.drawAging" class="range-item">
+          <div class="range-header">
+            <span class="range-label-text">做旧噪点大小 (mm)</span>
+            <span class="range-value-display">[ {{ (config.taxNumber.agingNoiseSize ?? 0.15).toFixed(2) }} ]</span>
+          </div>
+          <div class="range-container">
+            <button type="button" class="range-btn" @click.stop="adjustTaxNumberAgingNoiseSize(-0.01)">◀</button>
+            <input
+              type="range"
+              :value="config.taxNumber.agingNoiseSize ?? 0.15"
+              min="0.05"
+              max="0.5"
+              step="0.01"
+              @input="updateTaxNumber('agingNoiseSize', parseNumber($event))"
+            />
+            <button type="button" class="range-btn" @click.stop="adjustTaxNumberAgingNoiseSize(0.01)">▶</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -179,6 +236,20 @@ const adjustPositionY = (delta: number) => {
   emit('update-config', (config) => {
     const newValue = Math.max(-10, Math.min(10, config.taxNumber.positionY + delta))
     config.taxNumber.positionY = newValue
+  })
+}
+
+const adjustTaxNumberAgingIntensity = (delta: number) => {
+  emit('update-config', (config) => {
+    const newValue = Math.max(0, Math.min(1300, (config.taxNumber.agingIntensity ?? 30) + delta))
+    config.taxNumber.agingIntensity = newValue
+  })
+}
+
+const adjustTaxNumberAgingNoiseSize = (delta: number) => {
+  emit('update-config', (config) => {
+    const newValue = Math.max(0.05, Math.min(0.5, (config.taxNumber.agingNoiseSize ?? 0.15) + delta))
+    config.taxNumber.agingNoiseSize = newValue
   })
 }
 </script>

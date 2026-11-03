@@ -108,6 +108,36 @@ export class DrawStampUtils {
         this.imageCanvas = new DrawImageCanvas(canvas.width, canvas.height);
         this.drawStampTypeUtils = new DrawStampTypeUtils(mmToPixel)
         this.drawTaxNumberUtils = new DrawTaxNumberUtils(mmToPixel)
+        this.initSvgFilters()
+    }
+
+    private initSvgFilters() {
+        if (typeof document === 'undefined') return;
+        let svgContainer = document.getElementById('stamp-svg-filters');
+        if (!svgContainer) {
+            svgContainer = document.createElement('div');
+            svgContainer.id = 'stamp-svg-filters';
+            svgContainer.style.position = 'absolute';
+            svgContainer.style.width = '0';
+            svgContainer.style.height = '0';
+            svgContainer.style.overflow = 'hidden';
+            svgContainer.innerHTML = `
+                <svg>
+                    <defs>
+                        <filter id="stamp-ink-filter">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" result="noise" />
+                            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+                            <feGaussianBlur in="displaced" stdDeviation="0.2" result="blurred" />
+                            <feMerge>
+                                <feMergeNode in="blurred" />
+                                <feMergeNode in="displaced" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+                </svg>
+            `;
+            document.body.appendChild(svgContainer);
+        }
     }
 
     // 获取绘制印章的配置
@@ -1538,12 +1568,15 @@ export class DrawStampUtils {
             offscreenCtx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2)
         }
         offscreenCtx.clip()
-        // 绘制内圈列表
+        
+        // ------------------ 第一阶段：做旧前的渲染 (Pre-aging rendering) ------------------
+        
+        // 绘制内圈列表 (默认做旧)
         if (this.drawStampConfigs.innerCircleList.length > 0) {
             this.drawCircleUtils.drawCircleList(offscreenCtx, this.drawStampConfigs.innerCircleList, centerX, centerY, borderColor)
         }
-        // 如果没有图片，绘制五角星或SVG
-        if (this.drawStampConfigs.drawStar.drawStar) {
+        // 如果没有图片，绘制五角星 (如果 drawAging 不为 false，默认做旧)
+        if (this.drawStampConfigs.drawStar.drawStar && this.drawStampConfigs.drawStar.drawAging !== false) {
             this.drawSvgUtils.drawStarShape(offscreenCtx, this.drawStampConfigs.drawStar, centerX, centerY, this.drawStampConfigs.primaryColor)
         }
         if (this.drawStampConfigs.svgList && this.drawStampConfigs.svgList.length > 0) {
@@ -1553,52 +1586,58 @@ export class DrawStampUtils {
         if (this.drawStampConfigs.imageList && this.drawStampConfigs.imageList.length > 0) {
             this.drawImageList(offscreenCtx, this.drawStampConfigs.imageList, centerX, centerY)
         }
-        // 绘制公司文字内容（支持椭圆和矩形）
-        // 对于矩形印章，传递宽度和高度；对于椭圆印章，传递半径
-        if (stampShape === 'rectangle' || stampShape === 'rhombus' || stampShape === 'triangle') {
-            this.drawCompanyUtils.drawCompanyList(
-                offscreenCtx,
-                this.drawStampConfigs.companyList,
-                centerX,
-                centerY,
-                this.drawStampConfigs.width,
-                this.drawStampConfigs.height,
-                this.drawStampConfigs.primaryColor
-            )
-        } else {
-            this.drawCompanyUtils.drawCompanyList(
-                offscreenCtx,
-                this.drawStampConfigs.companyList,
-                centerX,
-                centerY,
-                radiusX,
-                radiusY,
-                this.drawStampConfigs.primaryColor
-            )
+        // 绘制公司文字内容（支持椭圆和矩形，过滤出需要做旧的公司名）
+        const agingCompanyList = this.drawStampConfigs.companyList.filter(c => c.drawAging !== false)
+        if (agingCompanyList.length > 0) {
+            if (stampShape === 'rectangle' || stampShape === 'rhombus' || stampShape === 'triangle') {
+                this.drawCompanyUtils.drawCompanyList(
+                    offscreenCtx,
+                    agingCompanyList,
+                    centerX,
+                    centerY,
+                    this.drawStampConfigs.width,
+                    this.drawStampConfigs.height,
+                    this.drawStampConfigs.primaryColor
+                )
+            } else {
+                this.drawCompanyUtils.drawCompanyList(
+                    offscreenCtx,
+                    agingCompanyList,
+                    centerX,
+                    centerY,
+                    radiusX,
+                    radiusY,
+                    this.drawStampConfigs.primaryColor
+                )
+            }
         }
-        this.drawStampTypeUtils.drawStampTypeList(offscreenCtx, this.drawStampConfigs.stampTypeList, centerX, centerY, radiusX, this.drawStampConfigs.primaryColor)
-        // 绘制编码文字内容，边框的圆形文字（支持多条编码）
+        // 绘制印章类型（过滤出需要做旧的印章类型）
+        const agingStampTypeList = this.drawStampConfigs.stampTypeList.filter(t => t.drawAging !== false)
+        if (agingStampTypeList.length > 0) {
+            this.drawStampTypeUtils.drawStampTypeList(offscreenCtx, agingStampTypeList, centerX, centerY, radiusX, this.drawStampConfigs.primaryColor)
+        }
+        // 绘制编码文字内容，边框 of 圆形文字（过滤出需要做旧的编码）
         const stampCodes: ICode[] = (this.drawStampConfigs.stampCodeList && this.drawStampConfigs.stampCodeList.length > 0)
             ? this.drawStampConfigs.stampCodeList
             : this.drawStampConfigs.stampCode
                 ? [this.drawStampConfigs.stampCode]
                 : []
 
-        for (const code of stampCodes) {
+        const agingCodes = stampCodes.filter(code => code.drawAging === true)
+        for (const code of agingCodes) {
             const codeColor = code.color || this.drawStampConfigs.primaryColor
             this.drawCodeUtils.drawCode(offscreenCtx, code, centerX, centerY, radiusX, radiusY, codeColor)
         }
-        // 绘制税号文字内容，边框的圆形文字
-        this.drawTaxNumberUtils.drawTaxNumber(offscreenCtx, this.drawStampConfigs.taxNumber, centerX, centerY, this.drawStampConfigs.primaryColor)
-    // 绘制自定义线条
-    if (this.drawStampConfigs.lineList && this.drawStampConfigs.lineList.length > 0) {
-        this.drawLines(offscreenCtx, this.drawStampConfigs.lineList, centerX, centerY)
-    }
-        offscreenCtx.restore()
-        // 将离屏 canvas 的内容绘制到主 canvas
-        ctx.save()
-        // 添加毛边效果
+        // 绘制税号文字内容（如果需要做旧）
+        if (this.drawStampConfigs.taxNumber && this.drawStampConfigs.taxNumber.drawAging === true) {
+            this.drawTaxNumberUtils.drawTaxNumber(offscreenCtx, this.drawStampConfigs.taxNumber, centerX, centerY, this.drawStampConfigs.primaryColor)
+        }
+        // 绘制自定义线条
+        if (this.drawStampConfigs.lineList && this.drawStampConfigs.lineList.length > 0) {
+            this.drawLines(offscreenCtx, this.drawStampConfigs.lineList, centerX, centerY)
+        }
 
+        // 添加毛边与防伪纹路（作用于离屏Canvas做旧前的内容）
         if (isEllipseShape && this.drawStampConfigs.roughEdge.drawRoughEdge) {
             this.addRoughEdge(
                 offscreenCtx,
@@ -1622,14 +1661,67 @@ export class DrawStampUtils {
             );
         }
 
+        // ------------------ 中间做旧处理 (Apply aging to offscreen context) ------------------
+        if (isEllipseShape && this.drawStampConfigs.agingEffect.applyAging) {
+            this.addAgingEffect(offscreenCtx, offscreenCanvas.width, offscreenCanvas.height, refreshOld)
+        }
+
+        // ------------------ 第三阶段：做旧后的渲染 (Post-aging rendering, 高清层) ------------------
+        
+        // 绘制五角星 (如果不需要做旧)
+        if (this.drawStampConfigs.drawStar.drawStar && this.drawStampConfigs.drawStar.drawAging === false) {
+            this.drawSvgUtils.drawStarShape(offscreenCtx, this.drawStampConfigs.drawStar, centerX, centerY, this.drawStampConfigs.primaryColor)
+        }
+        // 绘制公司文字（过滤出不做旧的公司名）
+        const clearCompanyList = this.drawStampConfigs.companyList.filter(c => c.drawAging === false)
+        if (clearCompanyList.length > 0) {
+            if (stampShape === 'rectangle' || stampShape === 'rhombus' || stampShape === 'triangle') {
+                this.drawCompanyUtils.drawCompanyList(
+                    offscreenCtx,
+                    clearCompanyList,
+                    centerX,
+                    centerY,
+                    this.drawStampConfigs.width,
+                    this.drawStampConfigs.height,
+                    this.drawStampConfigs.primaryColor
+                )
+            } else {
+                this.drawCompanyUtils.drawCompanyList(
+                    offscreenCtx,
+                    clearCompanyList,
+                    centerX,
+                    centerY,
+                    radiusX,
+                    radiusY,
+                    this.drawStampConfigs.primaryColor
+                )
+            }
+        }
+        // 绘制印章类型（过滤出不做旧的印章类型）
+        const clearStampTypeList = this.drawStampConfigs.stampTypeList.filter(t => t.drawAging === false)
+        if (clearStampTypeList.length > 0) {
+            this.drawStampTypeUtils.drawStampTypeList(offscreenCtx, clearStampTypeList, centerX, centerY, radiusX, this.drawStampConfigs.primaryColor)
+        }
+        // 绘制编码（过滤出不做旧的编码）
+        const clearCodes = stampCodes.filter(code => code.drawAging !== true)
+        for (const code of clearCodes) {
+            const codeColor = code.color || this.drawStampConfigs.primaryColor
+            this.drawCodeUtils.drawCode(offscreenCtx, code, centerX, centerY, radiusX, radiusY, codeColor)
+        }
+        // 绘制税号（如果不需要做旧）
+        if (this.drawStampConfigs.taxNumber && this.drawStampConfigs.taxNumber.drawAging !== true) {
+            this.drawTaxNumberUtils.drawTaxNumber(offscreenCtx, this.drawStampConfigs.taxNumber, centerX, centerY, this.drawStampConfigs.primaryColor)
+        }
+
+        offscreenCtx.restore()
+        
+        // ------------------ 最终合成 ------------------
+        // 将离屏 canvas 的内容绘制到主 canvas
+        ctx.save()
         // 设置合成模式，确保印章内容只在椭圆区域内显示
         ctx.globalCompositeOperation = 'source-over'
         ctx.drawImage(offscreenCanvas, 0, 0)
         ctx.restore()
-        // 添加做旧效果
-        if (isEllipseShape && this.drawStampConfigs.agingEffect.applyAging) {
-            this.addAgingEffect(ctx, this.canvas.width, this.canvas.height, refreshOld)
-        }
     }
 
     // 设置是否可拖动

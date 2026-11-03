@@ -34,129 +34,89 @@ function findChromeExecutable() {
     return null;
 }
 
-// 获取非冲突的输出目录名，实现“不覆盖原有图片”
-function getUniqueOutputDir(baseName) {
+// 获取输出目录名（直接以企业名称作为目录）
+function getOutputDir(baseName) {
     if (!fs.existsSync(outputBaseDir)) {
         fs.mkdirSync(outputBaseDir, { recursive: true });
     }
-
-    let targetDir = path.join(outputBaseDir, baseName);
-    if (!fs.existsSync(targetDir)) {
-        return targetDir;
-    }
-
-    let counter = 1;
-    while (true) {
-        targetDir = path.join(outputBaseDir, `${baseName}_${counter}`);
-        if (!fs.existsSync(targetDir)) {
-            return targetDir;
-        }
-        counter++;
-    }
+    return path.join(outputBaseDir, baseName);
 }
 
 async function main() {
     console.log('====== 📥 开始解析数据与加载模板 ======');
 
-    // 1. 读取 Excel 公司列表 并自动将目标企业的张数设置为 20（满足“一个企业20张”和“默认生成一张”）
     const excelPath = path.join(customeDir, 'company.xlsx');
-    if (!fs.existsSync(excelPath)) {
-        console.error(`❌ 未找到 Excel 文件: ${excelPath}`);
+    const templateJsonDir = path.join(customeDir, 'json');
+    const generalJsonPath = path.join(customeDir, 'general.json');
+
+    const companies = [];
+
+    // 1. 读取 Excel 公司列表（纯读取，不做任何自动修改和重写）
+    if (fs.existsSync(excelPath)) {
+        try {
+            const workbook = XLSX.readFile(excelPath);
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            let dataStartIdx = 0;
+            if (rawRows.length > 0) {
+                const firstCell = String(rawRows[0][0] || '').trim();
+                const headerKeywords = ['company', '公司名称', '公司', '企业名称', '名称', 'name', '企业', 'a列'];
+                if (headerKeywords.includes(firstCell.toLowerCase())) {
+                    dataStartIdx = 1;
+                }
+            }
+
+            for (let i = dataStartIdx; i < rawRows.length; i++) {
+                const row = rawRows[i];
+                if (!row || row.length === 0) continue;
+                const name = String(row[0] || '').trim();
+                if (!name) continue;
+
+                let count = 1;
+                if (row.length > 1) {
+                    const val = parseInt(row[1], 10);
+                    if (!isNaN(val) && val > 0) {
+                        count = val;
+                    }
+                }
+                companies.push({ name, count });
+            }
+        } catch (err) {
+            console.warn('⚠️ 读取 Excel 文件失败:', err.message);
+        }
+    }
+
+    // 若 Excel 未配置或不存在，自动从 json 目录中直接发现企业配置文件
+    if (companies.length === 0 && fs.existsSync(templateJsonDir)) {
+        const jsonFiles = fs.readdirSync(templateJsonDir).filter(f => f.endsWith('.json') && f !== 'general.json');
+        for (const file of jsonFiles) {
+            const name = path.basename(file, '.json');
+            companies.push({ name, count: 1 });
+        }
+    }
+
+    if (companies.length === 0) {
+        console.error('❌ 未找到待生成的企业名单。请在 custome/company.xlsx 中配置企业名单，或在 custome/json/ 下放置 json 配置文件。');
         process.exit(1);
     }
 
-    // 自动重写/更新 Excel 里的生成数
-    let excelRows = [];
-    try {
-        const wb = XLSX.readFile(excelPath);
-        excelRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    } catch (e) {}
-
-    let needsUpdate = false;
-    if (excelRows.length === 0) {
-        excelRows = [{ company: '书法印章有限公司', '生成数量': 20 }];
-        needsUpdate = true;
-    } else {
-        excelRows.forEach(row => {
-            if (row.company === '书法印章有限公司') {
-                let foundKey = null;
-                for (const k in row) {
-                    if (k !== 'company') {
-                        foundKey = k;
-                        break;
-                    }
-                }
-                const keyToUse = foundKey || '生成数量';
-                if (row[keyToUse] !== 20) {
-                    row[keyToUse] = 20;
-                    needsUpdate = true;
-                }
-            }
-        });
-    }
-
-    if (needsUpdate) {
-        const ws = XLSX.utils.json_to_sheet(excelRows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-        XLSX.writeFile(wb, excelPath);
-        console.log('📝 已自动将 Excel 里的 [书法印章有限公司] 生成数量更新为 20 张。');
-    }
-
-    const workbook = XLSX.readFile(excelPath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(worksheet);
-    const companies = rows.map(row => {
-        const name = row.company;
-        if (!name) return null;
-
-        // 寻找除 company 之外的数字列，若有则作为生成张数，没有则默认 1 张
-        let count = 1;
-        for (const key in row) {
-            if (key !== 'company') {
-                const val = parseInt(row[key], 10);
-                if (!isNaN(val) && val > 0) {
-                    count = val;
-                    break;
-                }
-            }
-        }
-        return { name, count };
-    }).filter(Boolean);
-
-    console.log(`📋 Excel 解析成功，共获取到 ${companies.length} 个目标企业:`);
+    console.log(`📋 共获取到 ${companies.length} 个目标企业:`);
     console.log(companies.map(c => ` - ${c.name} (生成数量: ${c.count}张)`).join('\n'));
 
-    // 2. 扫描并匹配 JSON 模板
-    const templates = [];
-    const files = fs.readdirSync(customeDir);
-    for (const file of files) {
-        if (file.endsWith('.json')) {
-            const filePath = path.join(customeDir, file);
-            try {
-                const config = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-                let templateCompanyName = '';
-                if (config.company && config.company.companyName) {
-                    templateCompanyName = config.company.companyName;
-                } else if (config.companyList && config.companyList[0] && config.companyList[0].companyName) {
-                    templateCompanyName = config.companyList[0].companyName;
-                }
-
-                if (templateCompanyName) {
-                    templates.push({
-                        fileName: file,
-                        companyName: templateCompanyName,
-                        config
-                    });
-                }
-            } catch (err) {
-                console.warn(`⚠️ 解析模板文件失败: ${file}, 错误:`, err.message);
-            }
+    // 2. 预先加载通用模板配置
+    let generalConfig = null;
+    if (fs.existsSync(generalJsonPath)) {
+        try {
+            generalConfig = JSON.parse(fs.readFileSync(generalJsonPath, 'utf8'));
+            console.log(`📂 已成功加载通用印章模板 [general.json]。`);
+        } catch (err) {
+            console.error(`❌ 解析通用模板 [general.json] 失败:`, err.message);
         }
+    } else {
+        console.warn(`⚠️ 未找到通用模板 [general.json]。`);
     }
-
-    console.log(`📂 共加载了 ${templates.length} 个 JSON 印章模板。`);
 
     // 3. 查找 Chrome 可执行文件
     const chromePath = findChromeExecutable();
@@ -198,20 +158,73 @@ async function main() {
     for (const item of companies) {
         const companyName = item.name;
         const generateCount = item.count;
-        
-        // 查找精准匹配的模板
-        const matched = templates.find(t => t.companyName === companyName);
-        if (!matched) {
-            console.warn(`⚠️  未找到匹配的公司名称模板，跳过生成: ${companyName}`);
-            continue;
+        const targetDir = getOutputDir(companyName);
+
+        let configToUse = null;
+        let isFallback = false;
+
+        // 尝试匹配以企业名称命名的专属 JSON 文件（优先查找 custome/json/，其次查找 custome/ 根目录）
+        let customJsonPath = path.join(templateJsonDir, `${companyName}.json`);
+        if (!fs.existsSync(customJsonPath)) {
+            const rootCustomJsonPath = path.join(customeDir, `${companyName}.json`);
+            if (fs.existsSync(rootCustomJsonPath)) {
+                customJsonPath = rootCustomJsonPath;
+            }
+        }
+        if (fs.existsSync(customJsonPath)) {
+            try {
+                configToUse = JSON.parse(fs.readFileSync(customJsonPath, 'utf8'));
+            } catch (err) {
+                console.warn(`⚠️ 读取或解析企业专属配置失败: ${path.basename(customJsonPath)}, 错误:`, err.message);
+            }
         }
 
-        console.log(`✨ [${companyName}] 匹配到模板 [${matched.fileName}]，开始生成 ${generateCount} 张防伪印章...`);
-        const targetDir = getUniqueOutputDir(companyName);
+        // 如果没有专属配置文件，回退使用通用 general.json 配置
+        if (!configToUse) {
+            if (generalConfig) {
+                configToUse = JSON.parse(JSON.stringify(generalConfig));
+                isFallback = true;
+            } else {
+                console.warn(`⚠️ [${companyName}] 未找到匹配的专属模板，且系统缺乏通用模板 [general.json]，跳过生成。`);
+                continue;
+            }
+        }
+
+        if (isFallback) {
+            console.log(`✨ [${companyName}] 未找到专属模板，回退使用通用模板 [general.json] 进行生成...`);
+            // 回退通用模板时，将公司名替换为当前公司
+            if (configToUse.company && configToUse.company.companyName) {
+                configToUse.company.companyName = companyName;
+            }
+            if (configToUse.companyList) {
+                configToUse.companyList.forEach(company => {
+                    company.companyName = companyName;
+                });
+            }
+
+            // 动态计算公司名称分布因素（textDistributionFactor），使总弧度在不同字数下均保持在公章标准弧度（约 230°）
+            const charCount = companyName.length;
+            const dynamicFactor = Number((charCount / 3.12).toFixed(2));
+            if (configToUse.company) {
+                configToUse.company.textDistributionFactor = dynamicFactor;
+            }
+            if (configToUse.companyList) {
+                configToUse.companyList.forEach(company => {
+                    company.textDistributionFactor = dynamicFactor;
+                });
+            }
+        } else {
+            console.log(`✨ [${companyName}] 匹配到专属配置文件 [${path.basename(customJsonPath)}]，按 JSON 配置开始生成 ${generateCount} 张印章...`);
+        }
+
+        // 确保目标输出目录存在
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
 
         for (let i = 1; i <= generateCount; i++) {
-            // 在浏览器中渲染这一张印章，并刷新毛边与防伪切线参数
-            const base64Data = await page.evaluate(async (configObj, idx) => {
+            // 直接在浏览器中按照 json 配置文件渲染印章，去除所有系统额外的篡改和随机化处理
+            const base64Data = await page.evaluate(async (configObj) => {
                 // 1. 创建临时的 Canvas 并挂在 body 上
                 let canvas = document.getElementById('batch-render-canvas');
                 if (!canvas) {
@@ -231,72 +244,26 @@ async function main() {
                 }
                 const utils = new window.DrawStampUtils(canvas, 10);
                 
-                // 3. 应用并克隆模板配置
+                // 3. 直接应用 JSON 配置，不添加任何系统额外的强制开启/关闭或随机化覆盖
                 const currentConfig = JSON.parse(JSON.stringify(configObj));
-                
-                // 确保防伪和毛边参数开启，以便刷新能生效
-                if (currentConfig.securityPattern) {
-                    currentConfig.securityPattern.openSecurityPattern = true;
-                }
-                if (currentConfig.roughEdge) {
-                    currentConfig.roughEdge.drawRoughEdge = true;
-                }
-                // 确保五角星的毛边和做旧参数在批处理中也生效
-                if (currentConfig.drawStar) {
-                    currentConfig.drawStar.drawRoughEdge = true;
-                    currentConfig.drawStar.drawAging = true;
-                    if (currentConfig.drawStar.roughEdgeCount === undefined) currentConfig.drawStar.roughEdgeCount = 15;
-                    if (currentConfig.drawStar.roughEdgeSize === undefined) currentConfig.drawStar.roughEdgeSize = 0.1;
-                    
-                    // 五角星做旧强度最低值为 1200
-                    const baseIntensity = currentConfig.drawStar.agingIntensity ?? 50;
-                    currentConfig.drawStar.agingIntensity = Math.max(1200, baseIntensity);
-                    
-                    if (currentConfig.drawStar.agingNoiseSize === undefined) currentConfig.drawStar.agingNoiseSize = 0.15;
-                }
-
-                // 确保公司名称在批处理中开启做旧效果并具有最大 1300 的随机强度
-                if (currentConfig.companyList) {
-                    currentConfig.companyList.forEach(company => {
-                        company.drawAging = true;
-                        // 随机在 100 - 1300 之间，最高不超过 1300
-                        company.agingIntensity = Math.floor(Math.random() * 1200) + 100;
-                        if (company.agingNoiseSize === undefined) company.agingNoiseSize = 0.15;
-                    });
-                }
-                if (currentConfig.stampTypeList) {
-                    currentConfig.stampTypeList.forEach(type => {
-                        if (type.drawAging) {
-                            if (type.agingIntensity === undefined) type.agingIntensity = 50;
-                            if (type.agingNoiseSize === undefined) type.agingNoiseSize = 0.15;
-                        }
-                    });
-                }
-
-                // 确保全局做旧效果开启
-                if (currentConfig.agingEffect) {
-                    currentConfig.agingEffect.applyAging = true;
-                }
-
                 utils.setDrawConfigs(currentConfig);
 
-                // 4. 强制刷新防伪纹路、做旧效果和毛边效果，生成全新的随机质感
-                // refreshStamp(refreshSecurityPattern = true, refreshOld = true, refreshRoughEdge = true)
-                utils.refreshStamp(true, true, true);
+                // 4. 刷新印章（完全根据 JSON 配置项中的实际开关状态刷新）
+                const refreshSecurity = !!(currentConfig.securityPattern && currentConfig.securityPattern.openSecurityPattern);
+                const refreshOld = !!(currentConfig.agingEffect && currentConfig.agingEffect.applyAging);
+                const refreshRoughEdge = !!(currentConfig.roughEdge && currentConfig.roughEdge.drawRoughEdge);
+                utils.refreshStamp(refreshSecurity, refreshOld, refreshRoughEdge);
 
                 // 5. 导出为白底 JPEG 格式的 base64 字符串
                 return await utils.exportStampAsDataURL('jpeg', 0.95);
-            }, matched.config, i);
+            }, configToUse);
 
             if (!base64Data) {
                 console.error(` ❌ 导出图片 ${i} 失败`);
                 continue;
             }
 
-            // 7. 保存到本地文件
-            if (!fs.existsSync(targetDir)) {
-                fs.mkdirSync(targetDir, { recursive: true });
-            }
+            // 保存到本地文件
             const buffer = Buffer.from(base64Data.split(',')[1], 'base64');
             const filePath = path.join(targetDir, `${i}.jpg`);
             fs.writeFileSync(filePath, buffer);
@@ -305,7 +272,7 @@ async function main() {
         console.log(`✅ [${companyName}] 的 ${generateCount} 张印章已全部写入: ${path.relative(rootDir, targetDir)}`);
     }
 
-    // 8. 清理工作空间并安全关闭
+    // 7. 清理工作空间并安全关闭
     console.log('\n====== 🧹 正在清理和关闭环境 ======');
     await browser.close();
     await server.close();

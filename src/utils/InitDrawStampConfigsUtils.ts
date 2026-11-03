@@ -51,7 +51,12 @@ export class InitDrawStampConfigsUtils {
         rectangleLineSpacing: 0,
         rectangleTextMargin: 1,
         rectanglePositionX: 0,
-        rectanglePositionY: 0
+        rectanglePositionY: 0,
+        drawAging: true,
+        agingIntensity: 50,
+        agingNoiseSize: 0.15,
+        drawRoughEdge: false,
+        roughEdgeScale: 1.0
     }
     private taxNumber: ITaxNumber = {
         code: '000000000000000000',
@@ -63,6 +68,11 @@ export class InitDrawStampConfigsUtils {
         positionY: 0,
         totalWidth: 26,
         fontWeight: 'normal',
+        drawAging: false,
+        agingIntensity: 30,
+        agingNoiseSize: 0.15,
+        drawRoughEdge: false,
+        roughEdgeScale: 1.0
     }
     private stampCode: ICode = {
         code: '1234567890',
@@ -74,6 +84,11 @@ export class InitDrawStampConfigsUtils {
         textDistributionFactor: 50,
         fontWeight: 'normal',
         color: this.primaryColor,
+        drawAging: false,
+        agingIntensity: 30,
+        agingNoiseSize: 0.15,
+        drawRoughEdge: false,
+        roughEdgeScale: 1.0
     }
     private stampType: IStampType = {
         stampType: '印章类型',
@@ -89,6 +104,11 @@ export class InitDrawStampConfigsUtils {
         orientation: 'horizontal',
         rotation: 0,
         color: this.primaryColor,
+        drawAging: true,
+        agingIntensity: 50,
+        agingNoiseSize: 0.15,
+        drawRoughEdge: false,
+        roughEdgeScale: 1.0
     }
     // 印章编码列表（支持多条编码），默认将单个 stampCode 作为第一条
     private stampCodeList: ICode[] = [this.stampCode]
@@ -149,6 +169,11 @@ export class InitDrawStampConfigsUtils {
             orientation: 'horizontal',
             rotation: 0,
             color: this.primaryColor,
+            drawAging: true,
+            agingIntensity: 50,
+            agingNoiseSize: 0.15,
+            drawRoughEdge: false,
+            roughEdgeScale: 1.0
         }
     ]
     // 添加公司列表属性
@@ -172,7 +197,12 @@ export class InitDrawStampConfigsUtils {
             rectangleTextAlignment: 'center',
             rectangleVerticalAlignment: 'center',
             rectangleLineSpacing: 0,
-            rectangleTextMargin: 1
+            rectangleTextMargin: 1,
+            drawAging: true,
+            agingIntensity: 50,
+            agingNoiseSize: 0.15,
+            drawRoughEdge: false,
+            roughEdgeScale: 1.0
         }
     ]
     // 内圈圆列表

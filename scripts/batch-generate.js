@@ -50,6 +50,8 @@ async function main() {
     const excelPath = path.join(customeDir, 'company.xlsx');
     const templateJsonDir = path.join(customeDir, 'json');
     const generalJsonPath = path.join(customeDir, 'general.json');
+    const generalPlJsonPath = path.join(customeDir, 'general-pl.json');
+    const generalComJsonPath = path.join(customeDir, 'general-com.json');
 
     const companies = [];
 
@@ -83,7 +85,8 @@ async function main() {
                         count = val;
                     }
                 }
-                companies.push({ name, count });
+                const type = row.length > 2 ? String(row[2] || '').trim().toLowerCase() : '';
+                companies.push({ name, count, type });
             }
         } catch (err) {
             console.warn('⚠️ 读取 Excel 文件失败:', err.message);
@@ -92,10 +95,10 @@ async function main() {
 
     // 若 Excel 未配置或不存在，自动从 json 目录中直接发现企业配置文件
     if (companies.length === 0 && fs.existsSync(templateJsonDir)) {
-        const jsonFiles = fs.readdirSync(templateJsonDir).filter(f => f.endsWith('.json') && f !== 'general.json');
+        const jsonFiles = fs.readdirSync(templateJsonDir).filter(f => f.endsWith('.json') && !['general.json', 'general-pl.json', 'general-com.json'].includes(f));
         for (const file of jsonFiles) {
             const name = path.basename(file, '.json');
-            companies.push({ name, count: 1 });
+            companies.push({ name, count: 1, type: '' });
         }
     }
 
@@ -105,20 +108,28 @@ async function main() {
     }
 
     console.log(`📋 共获取到 ${companies.length} 个目标企业:`);
-    console.log(companies.map(c => ` - ${c.name} (生成数量: ${c.count}张)`).join('\n'));
+    console.log(companies.map(c => ` - ${c.name} (生成数量: ${c.count}张${c.type ? `, 类型: ${c.type}` : ''})`).join('\n'));
 
     // 2. 预先加载通用模板配置
-    let generalConfig = null;
-    if (fs.existsSync(generalJsonPath)) {
-        try {
-            generalConfig = JSON.parse(fs.readFileSync(generalJsonPath, 'utf8'));
-            console.log(`📂 已成功加载通用印章模板 [general.json]。`);
-        } catch (err) {
-            console.error(`❌ 解析通用模板 [general.json] 失败:`, err.message);
+    const loadedTemplates = {};
+    function loadTemplate(filePath, filename) {
+        if (fs.existsSync(filePath)) {
+            try {
+                const cfg = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                console.log(`📂 已成功加载通用印章模板 [${filename}]。`);
+                return cfg;
+            } catch (err) {
+                console.error(`❌ 解析通用模板 [${filename}] 失败:`, err.message);
+            }
+        } else {
+            console.warn(`⚠️ 未找到通用模板 [${filename}]。`);
         }
-    } else {
-        console.warn(`⚠️ 未找到通用模板 [general.json]。`);
+        return null;
     }
+
+    loadedTemplates['general.json'] = loadTemplate(generalJsonPath, 'general.json');
+    loadedTemplates['general-pl.json'] = loadTemplate(generalPlJsonPath, 'general-pl.json');
+    loadedTemplates['general-com.json'] = loadTemplate(generalComJsonPath, 'general-com.json');
 
     // 3. 查找 Chrome 可执行文件
     const chromePath = findChromeExecutable();
@@ -160,12 +171,14 @@ async function main() {
     for (const item of companies) {
         const companyName = item.name;
         const generateCount = item.count;
+        const type = (item.type || '').trim().toLowerCase();
         const targetDir = getOutputDir(companyName);
 
         let configToUse = null;
-        let isFallback = false;
+        let templateFileName = '';
+        let isGeneralTemplate = false;
 
-        // 尝试匹配以企业名称命名的专属 JSON 文件（优先查找 custome/json/，其次查找 custome/ 根目录）
+        // 1. 优先尝试匹配以企业名称命名的专属 JSON 文件（先查找 custome/json/，其次查找 custome/ 根目录）
         let customJsonPath = path.join(templateJsonDir, `${companyName}.json`);
         if (!fs.existsSync(customJsonPath)) {
             const rootCustomJsonPath = path.join(customeDir, `${companyName}.json`);
@@ -176,29 +189,63 @@ async function main() {
         if (fs.existsSync(customJsonPath)) {
             try {
                 configToUse = JSON.parse(fs.readFileSync(customJsonPath, 'utf8'));
+                templateFileName = path.basename(customJsonPath);
+                isGeneralTemplate = false;
             } catch (err) {
                 console.warn(`⚠️ 读取或解析企业专属配置失败: ${path.basename(customJsonPath)}, 错误:`, err.message);
             }
         }
 
-        // 如果没有专属配置文件，回退使用通用 general.json 配置
+        // 2. 若无专属 JSON 配置文件，再根据 company.xlsx C列判定通用模板类型：
+        // pl  -> general-pl.json
+        // com -> general-com.json
+        // 未指定或其他 -> general.json（若无则回退 general-com.json）
         if (!configToUse) {
-            if (generalConfig) {
-                configToUse = JSON.parse(JSON.stringify(generalConfig));
-                isFallback = true;
+            if (type === 'pl') {
+                if (loadedTemplates['general-pl.json']) {
+                    configToUse = JSON.parse(JSON.stringify(loadedTemplates['general-pl.json']));
+                    templateFileName = 'general-pl.json';
+                    isGeneralTemplate = true;
+                } else if (loadedTemplates['general.json']) {
+                    configToUse = JSON.parse(JSON.stringify(loadedTemplates['general.json']));
+                    templateFileName = 'general.json (未找到 general-pl.json，回退)';
+                    isGeneralTemplate = true;
+                }
+            } else if (type === 'com') {
+                if (loadedTemplates['general-com.json']) {
+                    configToUse = JSON.parse(JSON.stringify(loadedTemplates['general-com.json']));
+                    templateFileName = 'general-com.json';
+                    isGeneralTemplate = true;
+                } else if (loadedTemplates['general.json']) {
+                    configToUse = JSON.parse(JSON.stringify(loadedTemplates['general.json']));
+                    templateFileName = 'general.json (未找到 general-com.json，回退)';
+                    isGeneralTemplate = true;
+                }
             } else {
-                console.warn(`⚠️ [${companyName}] 未找到匹配的专属模板，且系统缺乏通用模板 [general.json]，跳过生成。`);
-                continue;
+                if (loadedTemplates['general.json']) {
+                    configToUse = JSON.parse(JSON.stringify(loadedTemplates['general.json']));
+                    templateFileName = 'general.json';
+                    isGeneralTemplate = true;
+                } else if (loadedTemplates['general-com.json']) {
+                    configToUse = JSON.parse(JSON.stringify(loadedTemplates['general-com.json']));
+                    templateFileName = 'general-com.json';
+                    isGeneralTemplate = true;
+                }
             }
         }
 
-        if (isFallback) {
-            console.log(`✨ [${companyName}] 未找到专属模板，回退使用通用模板 [general.json] 进行生成...`);
-            // 回退通用模板时，将公司名替换为当前公司
-            if (configToUse.company && configToUse.company.companyName) {
+        if (!configToUse) {
+            console.warn(`⚠️ [${companyName}] 未找到可用的印章配置模板，跳过生成。`);
+            continue;
+        }
+
+        if (isGeneralTemplate) {
+            console.log(`✨ [${companyName}] 根据 C 列类型 [${type || '默认'}]，加载模板 [${templateFileName}] 进行生成...`);
+            // 通用模板时，将公司名替换为当前公司
+            if (configToUse.company) {
                 configToUse.company.companyName = companyName;
             }
-            if (configToUse.companyList) {
+            if (configToUse.companyList && Array.isArray(configToUse.companyList)) {
                 configToUse.companyList.forEach(company => {
                     company.companyName = companyName;
                 });
@@ -210,13 +257,13 @@ async function main() {
             if (configToUse.company) {
                 configToUse.company.textDistributionFactor = dynamicFactor;
             }
-            if (configToUse.companyList) {
+            if (configToUse.companyList && Array.isArray(configToUse.companyList)) {
                 configToUse.companyList.forEach(company => {
                     company.textDistributionFactor = dynamicFactor;
                 });
             }
         } else {
-            console.log(`✨ [${companyName}] 匹配到专属配置文件 [${path.basename(customJsonPath)}]，按 JSON 配置开始生成 ${generateCount} 张印章...`);
+            console.log(`✨ [${companyName}] 匹配到专属配置文件 [${templateFileName}]，按 JSON 配置开始生成 ${generateCount} 张印章...`);
         }
 
         // 确保目标输出目录存在

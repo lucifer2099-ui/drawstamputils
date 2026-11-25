@@ -518,7 +518,8 @@ export class DrawCompanyUtils {
                 textPosition,
                 textAlignment,
                 company.compression,
-                stretchScale
+                stretchScale,
+                company
             )
         } else {
             // 纵向绘制
@@ -535,7 +536,8 @@ export class DrawCompanyUtils {
                 verticalAlignment,
                 lineSpacing,
                 company.compression,
-                stretchScale
+                stretchScale,
+                company
             )
         }
 
@@ -557,7 +559,8 @@ export class DrawCompanyUtils {
         position: 'top' | 'bottom' | 'left' | 'right' | 'center',
         alignment: 'left' | 'center' | 'right',
         compression: number,
-        stretchScale: number
+        stretchScale: number,
+        company?: ICompany
     ) {
         ctx.textBaseline = 'middle'
         ctx.textAlign = 'center'
@@ -826,7 +829,8 @@ export class DrawCompanyUtils {
         position: 'top' | 'bottom' | 'left' | 'right' | 'center',
         alignment: 'left' | 'center' | 'right',
         compression: number,
-        stretchScale: number = 1
+        stretchScale: number = 1,
+        company?: ICompany
     ) {
         const characters = segmentGraphemes(text)
         ctx.textBaseline = 'middle'
@@ -943,7 +947,8 @@ export class DrawCompanyUtils {
         alignment: 'top' | 'center' | 'bottom',
         lineSpacing: number,
         compression: number,
-        stretchScale: number
+        stretchScale: number,
+        company?: ICompany
     ) {
         ctx.textBaseline = 'middle'
         ctx.textAlign = 'center'
@@ -1109,7 +1114,8 @@ export class DrawCompanyUtils {
         alignment: 'top' | 'center' | 'bottom',
         lineSpacing: number,
         compression: number,
-        stretchScale: number = 1
+        stretchScale: number = 1,
+        company?: ICompany
     ) {
         const characters = segmentGraphemes(text)
         ctx.textBaseline = 'middle'
@@ -1207,20 +1213,20 @@ export class DrawCompanyUtils {
     private drawChar(
         ctx: CanvasRenderingContext2D,
         char: string,
-        company: ICompany,
+        company: ICompany | undefined,
         fontSize: number,
         textBaseline: 'bottom' | 'middle',
         offsetX: number = 0,
         offsetY: number = 0
     ) {
-        if (company.drawRoughEdge) {
+        if (company?.drawRoughEdge) {
             ctx.filter = 'url(#stamp-ink-filter)';
         }
         ctx.fillText(char, offsetX, offsetY);
-        if (company.drawRoughEdge) {
+        if (company?.drawRoughEdge) {
             ctx.filter = 'none';
         }
-        if (company.drawAging) {
+        if (company?.drawAging) {
             const charWidth = ctx.measureText(char).width;
             this.applyTextAgingAt(ctx, fontSize, textBaseline, charWidth, company.drawAging, company.agingIntensity, company.agingNoiseSize, offsetX, offsetY, char);
         }

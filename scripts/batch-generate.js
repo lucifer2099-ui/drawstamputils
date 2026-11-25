@@ -110,6 +110,25 @@ async function main() {
     console.log(`📋 共获取到 ${companies.length} 个目标企业:`);
     console.log(companies.map(c => ` - ${c.name} (生成数量: ${c.count}张${c.type ? `, 类型: ${c.type}` : ''})`).join('\n'));
 
+    // 过滤掉 output 目录中已有结果文件的企业
+    const pendingCompanies = [];
+    for (const item of companies) {
+        const targetDir = getOutputDir(item.name);
+        if (fs.existsSync(targetDir)) {
+            const existingFiles = fs.readdirSync(targetDir).filter(f => /\.(jpe?g|png|svg)$/i.test(f));
+            if (existingFiles.length > 0) {
+                console.log(`⏭️ [${item.name}] 输出目录 (${path.relative(rootDir, targetDir)}) 已存在 ${existingFiles.length} 个结果文件，直接跳过。`);
+                continue;
+            }
+        }
+        pendingCompanies.push(item);
+    }
+
+    if (pendingCompanies.length === 0) {
+        console.log('\n🎉 所有企业的输出目录均已有结果文件，无需重复生成！');
+        return;
+    }
+
     // 2. 预先加载通用模板配置
     const loadedTemplates = {};
     function loadTemplate(filePath, filename) {
@@ -168,7 +187,7 @@ async function main() {
 
     // 6. 执行批量生成
     console.log('\n====== 🎨 开始批量渲染印章 ======');
-    for (const item of companies) {
+    for (const item of pendingCompanies) {
         const companyName = item.name;
         const generateCount = item.count;
         const type = (item.type || '').trim().toLowerCase();

@@ -114,11 +114,29 @@
                   type="range"
                   :value="type.compression"
                   min="0.1"
-                  max="1.5"
+                  max="3"
                   step="0.01"
                   @input="updateStampType(index, 'compression', parseNumber($event))"
                 />
                 <button type="button" class="range-btn" @click.stop="adjustCompression(index, 0.01)">▶</button>
+              </div>
+            </div>
+            <div class="range-item">
+              <div class="range-header">
+                <span class="range-label-text">{{ t('stamp.stampType.fontWidth') }}</span>
+                <span class="range-value-display">[ {{ (type.textStretch ?? 1).toFixed(2) }} ]</span>
+              </div>
+              <div class="range-container">
+                <button type="button" class="range-btn" @click.stop="adjustFontWidth(index, -0.05)">◀</button>
+                <input
+                  type="range"
+                  :value="type.textStretch ?? 1"
+                  min="0"
+                  max="8"
+                  step="0.05"
+                  @input="updateStampType(index, 'textStretch', parseNumber($event))"
+                />
+                <button type="button" class="range-btn" @click.stop="adjustFontWidth(index, 0.05)">▶</button>
               </div>
             </div>
             <div class="range-item">
@@ -418,8 +436,18 @@ const adjustCompression = (index: number, delta: number) => {
   emit('update-config', (config) => {
     const list = config.stampTypeList || []
     if (!list[index]) return
-    const newValue = Math.max(0.1, Math.min(1.5, list[index].compression + delta))
+    const newValue = Math.max(0.1, Math.min(3, list[index].compression + delta))
     list[index].compression = newValue
+  })
+}
+
+const adjustFontWidth = (index: number, delta: number) => {
+  emit('update-config', (config) => {
+    const list = config.stampTypeList || []
+    if (!list[index]) return
+    const current = list[index].textStretch ?? 1
+    const newValue = Math.max(0, Math.min(8, current + delta))
+    list[index].textStretch = newValue
   })
 }
 

@@ -89,7 +89,12 @@ export function getFontDisplayName(fontName: string): string {
     'Garamond': 'Garamond',
     'Bookman Old Style': 'Bookman Old Style',
     'Century Gothic': 'Century Gothic',
-    'Franklin Gothic Medium': 'Franklin Gothic Medium'
+    'Franklin Gothic Medium': 'Franklin Gothic Medium',
+
+    'Noto Naskh Arabic': 'Noto Naskh Arabic',
+    'Noto Sans Arabic': 'Noto Sans Arabic',
+    'Amiri': 'Amiri',
+    'Scheherazade New': 'Scheherazade New'
   };
   
   return fontNameMap[fontName] || fontName;
@@ -167,7 +172,12 @@ function getChineseFonts(): string[] {
     'DengXian Light', // 等线 Light
     'Microsoft YaHei Light', // 微软雅黑 Light
     'Microsoft YaHei Bold', // 微软雅黑 Bold
-    'SimSun-ExtB' // 宋体-扩展B
+    'SimSun-ExtB', // 宋体-扩展B
+
+    'Noto Naskh Arabic',
+    'Noto Sans Arabic',
+    'Amiri',
+    'Scheherazade New'
   ];
 }
 

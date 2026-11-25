@@ -34,6 +34,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "puppeteer-core": "^25.1.0",
     "rollup": "^4.27.4",
     "vue": "^3.4.37",

@@ -1,4 +1,5 @@
 import { ICode } from "../DrawStampTypes"
+import { getArcSegments, isRtlText } from "./textLayoutUtils"
 
 export class DrawCodeUtils {
     private mmToPixel = 10
@@ -41,6 +42,7 @@ export class DrawCodeUtils {
         const fontSize = code.fontHeight * this.mmToPixel
         const text = code.code
         const fontWeight = code.fontWeight || 'normal'
+        const stretchScale = code.textStretch ?? 1
 
         ctx.save()
         ctx.font = `${fontWeight} ${fontSize}px ${code.fontFamily}`
@@ -48,65 +50,81 @@ export class DrawCodeUtils {
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
 
-        const characters = text.split('')
-        const characterCount = characters.length
+        const rtl = isRtlText(text)
+        ctx.direction = rtl ? 'rtl' : 'ltr'
+
+        const segments = getArcSegments(text, rtl)
+        const spaceUnits = rtl && segments.length > 1 ? 1 : 0
+        const totalUnits =
+          segments.reduce((sum, s) => sum + s.units, 0) + Math.max(0, segments.length - 1) * spaceUnits
 
         // 处理单个字符的情况
-        if (characterCount === 1) {
+        if (totalUnits <= 1) {
             // 单个字符直接绘制在底部中心位置
             const x = centerX
             const y = centerY + radiusY - fontSize - code.borderOffset * this.mmToPixel
 
             ctx.save()
             ctx.translate(x, y)
-            ctx.scale(code.compression, 1)
+            // compression 继续只控制排布密度，stretchScale 单独拉伸高度
+            ctx.scale(code.compression, stretchScale)
             this.drawChar(ctx, text, code, fontSize, 'middle', 0, 0)
 
-            // 存储文字路径
+            // 存储文字路径（高度按拉伸后计入）
             const metrics = ctx.measureText(text)
+            const visualWidth = metrics.width * code.compression
+            const visualHeight = fontSize * stretchScale
             this.textPaths.push({
                 text,
                 type: 'code',
                 bounds: {
-                    x: x - (metrics.width * code.compression) / 2,
-                    y: y - fontSize / 2,
-                    width: metrics.width * code.compression,
-                    height: fontSize
+                    x: x - visualWidth / 2,
+                    y: y - visualHeight / 2,
+                    width: visualWidth,
+                    height: visualHeight
                 }
             })
 
             ctx.restore()
         } else {
             // 多个字符时的弧形排列
-            const totalAngle = Math.PI * ((1 + characterCount) / code.textDistributionFactor)
+            const totalAngle = Math.PI * ((1 + totalUnits) / code.textDistributionFactor)
             const startAngle = Math.PI / 2 + totalAngle / 2
-            const anglePerChar = totalAngle / (characterCount - 1)
+            const anglePerUnit = totalAngle / totalUnits
 
-            characters.forEach((char, index) => {
-                const angle = startAngle - anglePerChar * index
+            const orderedSegments = rtl ? [...segments].reverse() : segments
+            let accUnits = 0
+
+            orderedSegments.forEach((seg) => {
+                const segMid = accUnits + seg.units / 2
+                const angle = startAngle - anglePerUnit * segMid
                 const x = centerX + Math.cos(angle) * (radiusX - fontSize / 2 - code.borderOffset * this.mmToPixel)
                 const y = centerY + Math.sin(angle) * (radiusY - fontSize / 2 - code.borderOffset * this.mmToPixel)
 
                 ctx.save()
                 ctx.translate(x, y)
                 ctx.rotate(angle - Math.PI / 2)
-                ctx.scale(code.compression, 1)
-                this.drawChar(ctx, char, code, fontSize, 'middle', 0, 0)
+                ctx.scale(code.compression, stretchScale)
+                this.drawChar(ctx, seg.text, code, fontSize, 'middle', 0, 0)
 
                 // 存储每个字符的路径
-                const metrics = ctx.measureText(char)
+                const metrics = ctx.measureText(seg.text)
+                const visualWidth = metrics.width * code.compression
+                const visualHeight = fontSize * stretchScale
                 this.textPaths.push({
-                    text: char,
+                    text: seg.text,
                     type: 'code',
                     bounds: {
-                        x: x - (metrics.width * code.compression) / 2,
-                        y: y - fontSize / 2,
-                        width: metrics.width * code.compression,
-                        height: fontSize
+                        x: x - visualWidth / 2,
+                        y: y - visualHeight / 2,
+                        width: visualWidth,
+                        height: visualHeight
                     }
                 })
 
                 ctx.restore()
+
+                accUnits += seg.units + spaceUnits
             })
         }
 

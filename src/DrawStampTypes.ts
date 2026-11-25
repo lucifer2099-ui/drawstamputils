@@ -25,6 +25,13 @@ export type IRoughEdge = {
     roughEdgePoints: number // 毛边点数
 }
 
+// 单个文字调整配置
+export type ICharAdjustment = {
+    offsetX?: number // 水平偏移量（毫米），正数向右，负数向左
+    offsetY?: number // 垂直偏移量（毫米），正数向下，负数向上
+    rotation?: number // 旋转角度（度），正数顺时针，负数逆时针
+}
+
 // 绘制印章的公司
 export type ICompany = {
     companyName: string // 公司名称
@@ -34,6 +41,9 @@ export type ICompany = {
     fontFamily: string // 字体
     fontHeight: number // 字体高度
     fontWeight: string | number // 字体粗细
+    // 旧字段：fontWidth 曾用于尝试文字拉伸，现废弃，仅保留兼容
+    fontWidth?: number
+    textStretch?: number // 文本拉伸高度因子（仅影响渲染高度）
     fontStyle?: 'normal' | 'italic' // 字体样式（正常/倾斜）
     shape: 'ellipse' | 'rectangle' | 'rhombus' | 'organic' | 'triangle' // 印章形状
     adjustEllipseText: boolean // 是否调整椭圆
@@ -41,6 +51,8 @@ export type ICompany = {
     color?: string | undefined // 颜色
     startAngle: number // 文字开始角度（弧度）
     rotateDirection: 'clockwise' | 'counterclockwise' // 旋转方向（仅椭圆使用）
+    // 单个文字调整配置（数组，索引对应字符位置）
+    charAdjustments?: ICharAdjustment[] // 单个文字的调整配置
     // 矩形印章相关配置
     rectangleTextDirection: 'horizontal' | 'vertical' // 矩形文字方向：横向或纵向
     rectangleTextPosition: 'top' | 'bottom' | 'left' | 'right' | 'center' // 矩形文字位置
@@ -67,6 +79,7 @@ export type ICode = {
     fontWidth: number // 编码字体宽度
     textDistributionFactor: number // 文字分布因子
     fontWeight: string | number // 编码字体粗细
+    textStretch?: number // 文本拉伸高度因子（仅影响渲染高度）
     color?: string // 颜色
     drawAging?: boolean // 是否绘制做旧效果
     agingIntensity?: number // 做旧强度
@@ -85,6 +98,7 @@ export type ITaxNumber = {
     positionY: number // 编码文字位置
     totalWidth: number // 编码文字总宽度
     fontWeight: string | number // 税号字体粗细
+    textStretch?: number // 文本拉伸高度因子（仅影响渲染高度）
     color?: string // 颜色
     drawAging?: boolean // 是否绘制做旧效果
     agingIntensity?: number // 做旧强度
@@ -187,6 +201,7 @@ export type IStampType = {
     positionY: number // 位置
     fontWidth: number // 字体宽度
     fontWeight: string | number // 字体粗细
+    textStretch?: number // 文本拉伸高度因子（仅影响渲染高度）
     fontStyle?: 'normal' | 'italic' // 字体样式（正常/倾斜）
     lineSpacing: number // 新增：行间距
     color?: string // 颜色
